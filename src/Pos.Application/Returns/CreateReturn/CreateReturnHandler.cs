@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Pos.Application.Common;
+using Pos.Application.Inventory;
 using Pos.Domain.Common;
-using Pos.Domain.Inventory;
 using Pos.Domain.Returns;
 using Pos.Domain.Sales;
 
@@ -102,30 +102,10 @@ public sealed class CreateReturnHandler : IRequestHandler<CreateReturnCommand, R
                 RestockToInventory = input.RestockToInventory,
             });
 
-            // B8: nhập lại tồn (append-only) trừ hàng lỗi/hủy.
+            // B8: nhập lại tồn (append-only) qua StockLedger, trừ hàng lỗi/hủy.
             if (input.RestockToInventory)
-            {
-                _db.StockTransactions.Add(new StockTransaction
-                {
-                    StoreId = order.StoreId,
-                    DeviceId = cmd.DeviceId,
-                    VariantId = ol.VariantId,
-                    Type = StockTransactionType.Return,
-                    QtyChange = input.Qty,
-                    UnitCost = 0m,
-                    RefId = returnOrder.Id,
-                });
-
-                var balance = await _db.StockBalances
-                    .FirstOrDefaultAsync(b => b.VariantId == ol.VariantId && b.StoreId == order.StoreId, ct);
-                if (balance is null)
-                    _db.StockBalances.Add(new StockBalance { VariantId = ol.VariantId, StoreId = order.StoreId, Quantity = input.Qty });
-                else
-                {
-                    balance.Quantity += input.Qty;
-                    balance.MarkModified();
-                }
-            }
+                await StockLedger.ApplyAsync(_db, order.StoreId, ol.VariantId, input.Qty,
+                    StockTransactionType.Return, returnOrder.Id, cmd.DeviceId, 0m, ct);
 
             returnedNow[ol.Id] = input.Qty;
             lineResults.Add(new ReturnLineResult(ol.Id, ol.VariantId, input.Qty, refund, input.RestockToInventory));

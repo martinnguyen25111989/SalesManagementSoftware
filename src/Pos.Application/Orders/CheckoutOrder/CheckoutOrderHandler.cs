@@ -1,8 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Pos.Application.Common;
+using Pos.Application.Inventory;
 using Pos.Domain.Common;
-using Pos.Domain.Inventory;
 using Pos.Domain.Sales;
 
 namespace Pos.Application.Orders.CheckoutOrder;
@@ -74,40 +74,11 @@ public sealed class CheckoutOrderHandler : IRequestHandler<CheckoutOrderCommand,
             _db.Payments.Add(payment);     // ép trạng thái Added
         }
 
-        // B8: trừ tồn append-only — mỗi dòng 1 StockTransaction (Sale, QtyChange âm).
-        //     Quy đổi đơn vị 1:1 (chưa hỗ trợ UnitConversion ở bước này); giá vốn = 0 (tính sau).
+        // B8: trừ tồn append-only qua StockLedger (Sale, QtyChange âm). Quy đổi đơn vị 1:1
+        //     (chưa hỗ trợ UnitConversion); giá vốn = 0 (tính sau). Bán âm kho: mặc định cho qua.
         foreach (var line in order.Lines)
-        {
-            _db.StockTransactions.Add(new StockTransaction
-            {
-                StoreId = order.StoreId,
-                DeviceId = order.DeviceId,
-                VariantId = line.VariantId,
-                Type = StockTransactionType.Sale,
-                QtyChange = -line.Qty,
-                UnitCost = 0m,
-                RefId = order.Id,
-            });
-
-            // Cập nhật snapshot tồn (nguồn sự thật vẫn là StockTransaction).
-            var balance = await _db.StockBalances
-                .FirstOrDefaultAsync(b => b.VariantId == line.VariantId && b.StoreId == order.StoreId, ct);
-            if (balance is null)
-            {
-                // Bán âm kho: theo cấu hình (chặn/cảnh báo). Mặc định cho qua, đánh dấu âm.
-                _db.StockBalances.Add(new StockBalance
-                {
-                    VariantId = line.VariantId,
-                    StoreId = order.StoreId,
-                    Quantity = -line.Qty,
-                });
-            }
-            else
-            {
-                balance.Quantity -= line.Qty;
-                Touch(balance);
-            }
-        }
+            await StockLedger.ApplyAsync(_db, order.StoreId, line.VariantId, -line.Qty,
+                StockTransactionType.Sale, order.Id, order.DeviceId, 0m, ct);
 
         // B9: cập nhật tiền mặt dự kiến của ca theo phần thu tiền mặt.
         decimal cashAmount = cmd.Payments.Where(p => p.Method == PaymentMethod.Cash).Sum(p => p.Amount);

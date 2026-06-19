@@ -29,6 +29,9 @@ public sealed class TestPosDbContext : DbContext, IPosDbContext
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
     public DbSet<StockBalance> StockBalances => Set<StockBalance>();
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<PurchaseReceipt> PurchaseReceipts => Set<PurchaseReceipt>();
+    public DbSet<GrnLine> GrnLines => Set<GrnLine>();
     public DbSet<ReturnOrder> ReturnOrders => Set<ReturnOrder>();
     public DbSet<ReturnLine> ReturnLines => Set<ReturnLine>();
 

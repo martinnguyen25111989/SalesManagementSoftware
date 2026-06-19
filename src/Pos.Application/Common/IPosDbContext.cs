@@ -25,6 +25,9 @@ public interface IPosDbContext
     DbSet<Store> Stores { get; }
     DbSet<StockTransaction> StockTransactions { get; }
     DbSet<StockBalance> StockBalances { get; }
+    DbSet<Supplier> Suppliers { get; }
+    DbSet<PurchaseReceipt> PurchaseReceipts { get; }
+    DbSet<GrnLine> GrnLines { get; }
     DbSet<ReturnOrder> ReturnOrders { get; }
     DbSet<ReturnLine> ReturnLines { get; }
 

@@ -221,6 +221,26 @@
 
 ---
 
+### 2026-06-19 (tiếp 6) — B8: Tồn kho & Kho (Inventory)
+- **`StockLedger`** (`Pos.Application/Inventory/StockLedger.cs`): helper lõi B8 — append 1 StockTransaction
+  + cập nhật snapshot StockBalance (Local-first để nhiều dòng cùng variant không tạo snapshot trùng).
+  Dùng chung cho bán/trả/nhập/kiểm kê/chuyển kho. Đã refactor Checkout & Return dùng helper này.
+- **CQRS:** `Pos.Application/Inventory/`
+  - `ReceiveStock` (GRN) — PurchaseReceipt + GrnLines + StockTransaction(Purchase,+) có giá vốn; total; idempotent.
+  - `AdjustStock` (kiểm kê) — đếm thực tế → biến động chênh lệch (StockTake, ±); cần Manager + lý do (B2); idempotent.
+  - `TransferStock` — 2 vế (TransferOut −, TransferIn +) trong cùng SaveChanges (không mất hàng giữa 2 kho); idempotent.
+  - `GetStockOnHand` (query) — snapshot StockBalance, hoặc `FromLedger=true` cộng dồn StockTransaction để đối soát.
+- **API:** `InventoryController` — POST receive/adjust/transfer, GET on-hand. `IPosDbContext` thêm Suppliers,
+  PurchaseReceipts, GrnLines.
+- **Test:** +11 (nhập tăng tồn/giá vốn/idempotent/multi-line 1 balance; kiểm kê chênh lệch/quyền/idempotent;
+  chuyển kho 2 vế/cùng kho/idempotent; on-hand snapshot==ledger). Tổng **74 test pass**.
+- **Chưa làm (TODO):** giá vốn bình quân gia quyền/FIFO + COGS khi bán (cần field cost trên balance → migration) ·
+  reorder point / cảnh báo hết hàng / hạn dùng (cần field) · chặn bán âm kho theo cấu hình (ở checkout) ·
+  UnitConversion (bán/nhập theo đơn vị quy đổi).
+- **Bước tiếp theo:** HĐĐT EasyInvoice (B11-A) · AuditLog · B10 loyalty/công nợ · giá vốn & lãi gộp.
+
+---
+
 ## Mẫu entry cho lần sau (copy xuống dưới phần Nhật ký)
 
 ```

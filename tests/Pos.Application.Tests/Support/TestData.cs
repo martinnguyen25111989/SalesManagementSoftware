@@ -2,6 +2,7 @@ using Pos.Application.Orders.CheckoutOrder;
 using Pos.Application.Orders.CreateOrder;
 using Pos.Domain.Catalog;
 using Pos.Domain.Common;
+using Pos.Domain.Inventory;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
 
@@ -11,9 +12,26 @@ namespace Pos.Application.Tests.Support;
 internal static class TestData
 {
     public static readonly Guid StoreId = Guid.NewGuid();
+    public static readonly Guid Store2Id = Guid.NewGuid();
     public static readonly Guid ShiftId = Guid.NewGuid();
     public static readonly Guid RegisterId = Guid.NewGuid();
     public static readonly Guid CashierId = Guid.NewGuid();
+    public static readonly Guid SupplierId = Guid.NewGuid();
+
+    /// <summary>Thêm 1 nhà cung cấp (cho test nhập hàng); trả về SupplierId.</summary>
+    public static async Task<Guid> AddSupplierAsync(TestPosDbContext db)
+    {
+        db.Suppliers.Add(new Supplier { Id = SupplierId, Name = "NCC Demo" });
+        await db.SaveChangesAsync();
+        return SupplierId;
+    }
+
+    /// <summary>Thêm chi nhánh thứ 2 (cho test chuyển kho).</summary>
+    public static async Task AddStore2Async(TestPosDbContext db)
+    {
+        db.Stores.Add(new Store { Id = Store2Id, Name = "Demo 2", OrderPrefix = "HCM02" });
+        await db.SaveChangesAsync();
+    }
 
     /// <summary>Seed chi nhánh + máy POS (chưa mở ca) — dùng cho test OpenShift.</summary>
     public static async Task SeedStoreAndRegisterAsync(TestPosDbContext db)
