@@ -9,7 +9,7 @@ using Pos.Client.UI.Views;
 
 namespace Pos.Client.UI;
 
-public partial class App : Application
+public partial class App : Avalonia.Application
 {
     public override void Initialize()
     {

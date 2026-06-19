@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Pos.Application.Common;
 using Pos.Domain.Catalog;
 using Pos.Domain.Customers;
 using Pos.Domain.Inventory;
@@ -11,7 +12,7 @@ using Pos.Domain.Sales;
 
 namespace Pos.Infrastructure.Persistence;
 
-public class PosDbContext : DbContext
+public class PosDbContext : DbContext, IPosDbContext
 {
     public PosDbContext(DbContextOptions<PosDbContext> options) : base(options) { }
 

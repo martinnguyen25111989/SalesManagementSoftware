@@ -114,6 +114,73 @@
   - [ ] Tạo `deploy/docker-compose.yml` (PostgreSQL + Redis) và `docker compose up -d`
   - [ ] Lấy tài khoản **test EasyInvoice** + tài liệu API (BusinessRules.md B11-A.9)
 
+### 2026-06-19 — Seed RBAC + HAL NetworkPrinter + CQRS tạo Order
+- **Seed (B2):** `Pos.Infrastructure/Persistence/Seed/DbSeeder.cs` + `SeedIds.cs` — 5 role
+  (Owner/Manager/Cashier/Warehouse/Accountant), 13 permission theo hành động, mapping role→permission,
+  và dữ liệu mẫu (Tenant/Store HCM01/Register/2 User/2 sản phẩm + bảng giá). Idempotent, GUID cố định.
+  Gọi tự động khi API chạy ở Development (`Program.cs`, sau `MigrateAsync`).
+- **HAL (Technical §10):** `Pos.Hardware.MacOS` — `NetworkReceiptPrinter` (IReceiptPrinter, ESC/POS qua
+  TCP 9100), `NetworkCashDrawer` (ICashDrawer, kick qua máy in), `EscPosWriter` (fluent, gồm QR & cắt giấy),
+  `ReceiptRenderer`. *Chưa map dấu tiếng Việt* (mặc định Latin1) — việc làm tiếp.
+- **CQRS (MediatR):** `Pos.Application` — `IPosDbContext` (PosDbContext hiện thực), `OrderCalculator`
+  (B5/B13: giá → CK dòng → CK tổng phân bổ → VAT theo thuế suất → làm tròn), `CreateOrderCommand/Handler`
+  (Draft, idempotency = Order.Id, validate ca mở, chưa trừ tồn). `OrdersController` POST /api/orders.
+  5 unit test cho OrderCalculator (đa thuế suất, CK tổng không lệch 1đ, làm tròn tiền mặt) — pass.
+- **Lưu ý va chạm:** thêm type vào namespace `Pos.Application` làm `App : Application` (Avalonia) trong
+  `Pos.Client.UI` bị nhập nhằng → đã qualify `Avalonia.Application`.
+- **Bước tiếp theo:** checkout (thanh toán + trừ tồn StockTransaction) · phát hành HĐĐT EasyInvoice ·
+  đăng ký DI máy in theo runtime ở Client.UI · map code page tiếng Việt cho máy in.
+
+---
+
+### 2026-06-19 (tiếp) — Checkout flow: thanh toán + trừ tồn (B6/B8/B9)
+- **CQRS:** `Pos.Application/Orders/CheckoutOrder/` — `CheckoutOrderCommand/Handler`: Draft → Completed,
+  ghi `Payment` (đa phương thức, tổng = GrandTotal), trừ tồn append-only `StockTransaction` (Sale, QtyChange âm)
+  + cập nhật snapshot `StockBalance`, cộng tiền mặt vào `Shift.ExpectedCash` (B9). Idempotent theo OrderId
+  (đơn đã Completed → trả kết quả cũ, không trừ tồn/thu tiền lần hai). Tính tiền thối + cờ mở két (B6).
+- **API:** `POST /api/orders/{id}/checkout`. `IPosDbContext` thêm `StockTransactions`, `StockBalances`.
+- **Bug bắt được nhờ test:** PK GUID client-gen (non-default) → thêm child chỉ qua navigation bị EF coi là
+  Modified (lỗi khi lưu, cả PostgreSQL). Sửa: `Add` tường minh cho `Payment`. Lưu ý chung cho mọi entity con.
+- **Test:** thêm `Microsoft.EntityFrameworkCore.InMemory` + `TestPosDbContext`/`TestData` (giữ tách tầng,
+  không cần Infrastructure). 9 handler test mới (CreateOrder idempotency/ca đóng/override giá; Checkout trừ tồn,
+  lệch tiền, hỗn hợp, idempotency không trừ tồn 2 lần). Tổng 16 test pass.
+- **Bước tiếp theo:** OpenShift/CloseShift (X/Z report) · Hold/Resume · phát hành HĐĐT EasyInvoice (B11-A) ·
+  trả hàng (B7) · DI máy in theo runtime ở Client.UI.
+
+---
+
+### 2026-06-19 (tiếp 2) — B9: Ca làm việc & Quỹ tiền (Shift / Cash)
+- **CQRS (MediatR):** `Pos.Application/Shifts/`
+  - `OpenShift` — mở ca, ExpectedCash = OpeningFloat; chặn mở 2 ca cùng 1 Register; idempotent theo ShiftId.
+  - `CloseShift` — Variance = CountedCash − ExpectedCash; chặn nếu còn đơn Hold; lệch > ngưỡng 50k cần
+    ManagerApproved (B2); idempotent; trả **Z-report**.
+  - `RecordCashMovement` — thu/chi tiền mặt, điều chỉnh ExpectedCash (In +, Out −); Add tường minh (GUID PK).
+  - `GetShiftReport` (query) + `ShiftReportBuilder` — **X-report** (đang mở) / **Z-report** (đã đóng):
+    cash sales, cash in/out, ExpectedCash, OrderCount, GrandTotalSales, payments theo phương thức.
+- **API:** `ShiftsController` — POST `/api/shifts/open`, `/{id}/close`, `/{id}/cash-movements`; GET `/{id}/report`.
+- **IPosDbContext** thêm `CashMovements`, `Registers`.
+- **Lưu ý:** namespace `Pos.Application.Shifts.CashMovement` trùng tên entity `CashMovement` → đổi namespace
+  thành `CashMovements` (plural) để khỏi nhập nhằng alias.
+- **Test:** +11 (open/cash-movement/close/X-report). Tổng **27 test pass**.
+- **Bước tiếp theo:** Hold/Resume đơn (B4) · phát hành HĐĐT EasyInvoice (B11-A) · trả hàng (B7) ·
+  DI máy in theo runtime ở Client.UI · CashRefund (B7) vào ExpectedCash của ca.
+
+---
+
+### 2026-06-19 (tiếp 3) — B4: Vòng đời đơn (Hold / Resume / Void)
+- **CQRS (MediatR):** `Pos.Application/Orders/`
+  - `HoldOrder` — Draft → OnHold; idempotent; chặn nếu không phải Draft.
+  - `ResumeOrder` — OnHold → Draft; idempotent.
+  - `VoidOrder` — Draft/OnHold → Voided; cần `ManagerApproved` + `Reason` (B2); CHẶN đơn đã
+    Completed/Returned (phải hủy qua HĐĐT B11); idempotent. (AuditLog: bổ sung khi có module Audit.)
+  - Hoàn tất B4 state machine (Draft/OnHold/Completed/Voided/Returned).
+- **Chung:** thêm `EntityExtensions.MarkModified()` (cập nhật LastModifiedUtc + Version + SyncStatus=Pending)
+  gom logic đánh dấu sửa cho offline-sync.
+- **API:** `OrdersController` thêm POST `/{id}/hold`, `/{id}/resume`, `/{id}/void`; gom try/catch vào helper `Run`.
+- **Test:** +12 (hold/resume/void: happy, idempotent, chặn completed, thiếu quyền/lý do). Tổng **39 test pass**.
+- **Bước tiếp theo:** AuditLog (cross-cutting cho void/return/giảm giá/lệch quỹ) · trả hàng (B7) ·
+  phát hành HĐĐT EasyInvoice (B11-A) · DI máy in theo runtime ở Client.UI.
+
 ---
 
 ## Mẫu entry cho lần sau (copy xuống dưới phần Nhật ký)
@@ -131,7 +198,8 @@
 
 
 Lưu ý
-Chưa làm / cần quyết định (8 mục): git init + bật hook · Avalonia 11 vs 12 · trả Postgres về 5432 · tài khoản test EasyInvoice · seed Role/Permission · NetworkPrinter · CQRS handlers · tách IEntityTypeConfiguration.
+Chưa làm / cần quyết định (5 mục): git init + bật hook · Avalonia 11 vs 12 · trả Postgres về 5432 · tài khoản test EasyInvoice · tách IEntityTypeConfiguration.
+Đã xong (2026-06-19): seed Role/Permission · NetworkPrinter (HAL) · CQRS tạo Order.
 
 - Dùng EF 8 pinned (Npgsql.EFCore.PostgreSQL 8.0.10, dotnet-ef 8.0.10) cho khớp .NET 8.
 - Lệnh dotnet ef cần export PATH="$PATH:$HOME/.dotnet/tools" (đã ghi vào docs/Remember.md).
@@ -139,6 +207,7 @@ Chưa làm / cần quyết định (8 mục): git init + bật hook · Avalonia 
 
 Bước tiếp theo gợi ý
 
-- Seed Role/Permission mặc định (5 role trong B2) + dữ liệu mẫu.
-- HAL implementation đầu tiên: NetworkPrinter (ESC/POS qua TCP 9100) trong Pos.Hardware.MacOS.
-- Bắt đầu CQRS handlers ở Pos.Application (MediatR) cho luồng tạo Order.
+- Checkout: thanh toán (đa phương thức) + trừ tồn append-only (StockTransaction) khi hoàn tất đơn.
+- Phát hành HĐĐT EasyInvoice (B11-A): IEInvoiceProvider + hàng đợi EInvoicePending + idempotency theo Order.Id.
+- Đăng ký DI máy in/két theo OS runtime ở Client.UI (HAL); map code page tiếng Việt cho NetworkPrinter.
+- Test handler CreateOrder (EF InMemory/SQLite): idempotency, chặn ca đóng, lấy giá theo bảng giá.

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pos.Domain.Catalog;
+using Pos.Domain.Inventory;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
 using Pos.Domain.Sales;
@@ -18,7 +19,11 @@ public interface IPosDbContext
     DbSet<Variant> Variants { get; }
     DbSet<PriceItem> PriceItems { get; }
     DbSet<Shift> Shifts { get; }
+    DbSet<CashMovement> CashMovements { get; }
+    DbSet<Register> Registers { get; }
     DbSet<Store> Stores { get; }
+    DbSet<StockTransaction> StockTransactions { get; }
+    DbSet<StockBalance> StockBalances { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }
