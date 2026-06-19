@@ -183,6 +183,24 @@
 
 ---
 
+### 2026-06-19 (tiếp 4) — B5 Khuyến mãi + B6 Thanh toán (hardening)
+- **B5 — `PromotionEngine`** (`Pos.Application/Pricing/PromotionEngine.cs`, thuần, không I/O):
+  hỗ trợ LinePercent/LineAmount, OrderPercent/OrderAmount, QtyTierPercent, MemberPercent,
+  VoucherPercent/Amount. Điều kiện: time window, MinOrderValue, hạng KH, voucher (hạn/min/lượt dùng —
+  trả lý do từ chối). Gộp KM: duyệt theo Priority giảm dần, **dừng sau KM non-stackable** (loại trừ).
+  Clamp dòng & tổng không âm; làm tròn đồng. (BOGO/Combo để sau — cần thêm dòng quà tặng.)
+- **Tích hợp:** `CreateOrderCommand` thêm `Promotions`, `VoucherCode`, `CustomerTierId`, `ManagerApproved`.
+  Handler chạy engine → gộp CK tay + KM theo dòng, áp CK tổng; **chặn CK tay dòng > 10% nếu chưa duyệt**
+  (B2/B5); từ chối khi voucher không hợp lệ. OrderLine lưu CK đã gộp.
+- **B6 — Checkout hardening:** thẻ/QR/ví phải có `ExternalRef` (xác nhận đã nhận tiền — không tự "Paid",
+  B6 edge "QR chưa về"); chặn payment ≤ 0. (Phần lõi B6: hỗn hợp/khớp GrandTotal/tiền thối/mở két đã có.)
+- **Test:** +16 (engine: line/order/qtytier/member/voucher/exclusive/clamp; tích hợp CreateOrder + ngưỡng
+  CK tay; B6 QR có/không ref). Tổng **55 test pass**.
+- **Bước tiếp theo:** BOGO/Combo (thêm dòng quà) · seed Promotion mẫu + map JSON→PromotionDef ·
+  trả hàng (B7) · HĐĐT EasyInvoice (B11-A) · AuditLog.
+
+---
+
 ## Mẫu entry cho lần sau (copy xuống dưới phần Nhật ký)
 
 ```

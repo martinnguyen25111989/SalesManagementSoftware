@@ -41,10 +41,20 @@ public sealed class CheckoutOrderHandler : IRequestHandler<CheckoutOrderCommand,
         // B6: tổng các payment phải bằng GrandTotal (thanh toán hỗn hợp).
         if (cmd.Payments.Count == 0)
             throw new BusinessRuleException("Thiếu thông tin thanh toán.");
+        if (cmd.Payments.Any(p => p.Amount <= 0m))
+            throw new BusinessRuleException("Số tiền thanh toán phải lớn hơn 0.");
         decimal totalPaid = cmd.Payments.Sum(p => p.Amount);
         if (totalPaid != order.GrandTotal)
             throw new BusinessRuleException(
                 $"Tổng thanh toán {totalPaid:N0} khác tổng đơn {order.GrandTotal:N0} (B6).");
+
+        // B6: thẻ/QR/ví phải có mã tham chiếu xác nhận đã nhận tiền — không tự "Paid" khi tiền chưa về.
+        var unconfirmed = cmd.Payments.FirstOrDefault(p =>
+            p.Method is PaymentMethod.Card or PaymentMethod.VietQR or PaymentMethod.Wallet
+            && string.IsNullOrWhiteSpace(p.ExternalRef));
+        if (unconfirmed is not null)
+            throw new BusinessRuleException(
+                $"Thanh toán {unconfirmed.Method} cần mã tham chiếu xác nhận đã nhận tiền (B6).");
 
         var now = DateTime.UtcNow;
 

@@ -9,6 +9,9 @@ namespace Pos.Application.Orders.CreateOrder;
 
 public sealed class CreateOrderHandler : IRequestHandler<CreateOrderCommand, OrderResult>
 {
+    /// <summary>Ngưỡng giảm giá tay theo dòng cần Manager duyệt (B2/B5). Cấu hình được sau.</summary>
+    private const decimal ManualLineDiscountThreshold = 0.10m;
+
     private readonly IPosDbContext _db;
 
     public CreateOrderHandler(IPosDbContext db) => _db = db;
@@ -48,10 +51,12 @@ public sealed class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Ord
             .Select(g => g.OrderByDescending(p => p.CreatedUtc).First())
             .ToDictionaryAsync(p => p.VariantId, p => p.Price, ct);
 
-        // 5) Dựng dòng tính tiền (B5: giá → CK dòng → …).
-        var calcLines = new List<OrderCalcLine>(cmd.Lines.Count);
-        var unitPrices = new decimal[cmd.Lines.Count];
-        for (int i = 0; i < cmd.Lines.Count; i++)
+        // 5) Giải đơn giá + thuế suất từng dòng.
+        int n = cmd.Lines.Count;
+        var unitPrices = new decimal[n];
+        var taxRates = new VatRate[n];
+        var promoLines = new PromoLine[n];
+        for (int i = 0; i < n; i++)
         {
             var l = cmd.Lines[i];
             if (!variants.TryGetValue(l.VariantId, out var variant))
@@ -62,11 +67,32 @@ public sealed class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Ord
                     : throw new BusinessRuleException($"Biến thể {l.VariantId} chưa có giá bán."));
 
             unitPrices[i] = unitPrice;
-            var taxRate = variant.Product?.TaxRate ?? VatRate.Ten;
-            calcLines.Add(new OrderCalcLine(l.Qty, unitPrice, l.LineDiscount, taxRate));
+            taxRates[i] = variant.Product?.TaxRate ?? VatRate.Ten;
+            promoLines[i] = new PromoLine(l.VariantId, l.Qty, unitPrice);
         }
 
-        var totals = OrderCalculator.Calculate(calcLines, cmd.OrderDiscount, cmd.CashRoundingUnit);
+        // Khuyến mãi tự động (B5).
+        var promo = PromotionEngine.Evaluate(promoLines, cmd.Promotions,
+            new PromoContext(DateTime.UtcNow, cmd.CustomerTierId, cmd.VoucherCode));
+        if (!string.IsNullOrWhiteSpace(cmd.VoucherCode) && promo.RejectedVouchers.Count > 0)
+            throw new BusinessRuleException(string.Join("; ", promo.RejectedVouchers));
+
+        // Gộp CK tay (theo dòng) + CK khuyến mãi; chặn CK tay vượt ngưỡng nếu chưa được duyệt (B2/B5).
+        var calcLines = new List<OrderCalcLine>(n);
+        for (int i = 0; i < n; i++)
+        {
+            var l = cmd.Lines[i];
+            decimal gross = l.Qty * unitPrices[i];
+            if (l.LineDiscount > ManualLineDiscountThreshold * gross && !cmd.ManagerApproved)
+                throw new BusinessRuleException(
+                    $"Giảm giá tay dòng {l.VariantId} vượt ngưỡng {ManualLineDiscountThreshold:P0} — cần Manager duyệt.");
+
+            decimal lineDiscount = Math.Min(gross, l.LineDiscount + promo.LineDiscounts[i]);
+            calcLines.Add(new OrderCalcLine(l.Qty, unitPrices[i], lineDiscount, taxRates[i]));
+        }
+
+        decimal orderDiscount = cmd.OrderDiscount + promo.OrderDiscount;
+        var totals = OrderCalculator.Calculate(calcLines, orderDiscount, cmd.CashRoundingUnit);
 
         // 6) Tạo Order + OrderLine (Draft). Số đơn hiển thị có prefix chi nhánh;
         //    định danh nội bộ là GUID. Số chính thức có thể cấp khi phát hành HĐĐT.
@@ -99,7 +125,7 @@ public sealed class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Ord
                 VariantId = l.VariantId,
                 Qty = l.Qty,
                 UnitPrice = unitPrices[i],
-                LineDiscount = l.LineDiscount,
+                LineDiscount = calcLines[i].LineDiscount, // CK tay + KM, đã gộp
                 TaxRate = calcLines[i].TaxRate,
                 LineTotal = r.LineTotal,
                 Note = l.Note,
