@@ -201,6 +201,26 @@
 
 ---
 
+### 2026-06-19 (tiếp 5) — B7: Trả hàng / Hoàn tiền (Return / Refund)
+- **CQRS:** `Pos.Application/Returns/CreateReturn/` — `CreateReturnCommand/Handler`:
+  - Tham chiếu hóa đơn gốc (phải Completed/PartiallyReturned); **không trả quá số đã mua** (cộng dồn
+    các phiếu trả trước); cần `ManagerApproved` + lý do (B7); idempotent theo ReturnId.
+  - **Hoàn tiền theo tỷ lệ** trên `OrderLine.LineTotal` (đã gồm CK tổng phân bổ + VAT) → đúng cả khi đơn
+    có KM tổng (B7 edge).
+  - **B8:** nhập lại tồn append-only (`StockTransaction` Type=Return, +qty) + cập nhật `StockBalance`;
+    `RestockToInventory=false` cho hàng lỗi → không nhập lại.
+  - **B9:** hoàn tiền mặt giảm `Shift.ExpectedCash`.
+  - **B4:** cập nhật hóa đơn gốc → Returned (toàn phần) / PartiallyReturned; PaymentStatus=Refunded.
+- **API:** `ReturnsController` POST `/api/returns`. `IPosDbContext` thêm `ReturnOrders`, `ReturnLines`.
+- **Chưa làm (TODO trong code):** HĐĐT điều chỉnh/thay thế (B11), AuditLog, tính lại điểm/công nợ (B10),
+  đổi hàng (compose: trả + tạo đơn mới), ReturnOrder chưa có ShiftId → report CashRefunds vẫn 0
+  (ExpectedCash đã phản ánh đúng cho variance).
+- **Test:** +8 (toàn phần/một phần/prorate, quá số, cộng dồn, hàng lỗi không nhập kho, chưa duyệt/thiếu lý do,
+  đơn chưa hoàn tất, idempotent). Tổng **63 test pass**.
+- **Bước tiếp theo:** HĐĐT EasyInvoice (B11-A) + chứng từ điều chỉnh khi trả hàng · AuditLog · B10 loyalty/công nợ.
+
+---
+
 ## Mẫu entry cho lần sau (copy xuống dưới phần Nhật ký)
 
 ```

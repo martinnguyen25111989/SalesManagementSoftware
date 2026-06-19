@@ -53,22 +53,22 @@ internal static class TestData
         return variantId;
     }
 
-    /// <summary>Tạo 1 đơn Draft (1 dòng) qua handler; trả về OrderId. Yêu cầu đã <see cref="SeedAsync"/>.</summary>
-    public static async Task<Guid> CreateDraftOrderAsync(TestPosDbContext db)
+    /// <summary>Tạo 1 đơn Draft (1 dòng, thuế 10%) qua handler; trả về OrderId. Yêu cầu đã <see cref="SeedAsync"/>.</summary>
+    public static async Task<Guid> CreateDraftOrderAsync(TestPosDbContext db, decimal qty = 1m)
     {
         var variantId = await AddProductAsync(db, 10_000m, VatRate.Ten);
         var r = await new CreateOrderHandler(db).Handle(new CreateOrderCommand
         {
             StoreId = StoreId, ShiftId = ShiftId, CashierId = CashierId,
-            Lines = new[] { new CreateOrderLine(variantId, 1m) },
+            Lines = new[] { new CreateOrderLine(variantId, qty) },
         }, default);
         return r.Id;
     }
 
-    /// <summary>Tạo đơn rồi chốt (Completed) — dùng để test các nhánh "đơn đã hoàn tất".</summary>
-    public static async Task<Guid> CreateCompletedOrderAsync(TestPosDbContext db)
+    /// <summary>Tạo đơn rồi chốt (Completed, tiền mặt) — dùng để test trả hàng / nhánh "đã hoàn tất".</summary>
+    public static async Task<Guid> CreateCompletedOrderAsync(TestPosDbContext db, decimal qty = 1m)
     {
-        var id = await CreateDraftOrderAsync(db);
+        var id = await CreateDraftOrderAsync(db, qty);
         var order = await db.Orders.FindAsync(id);
         await new CheckoutOrderHandler(db).Handle(new CheckoutOrderCommand
         {

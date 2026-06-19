@@ -3,6 +3,7 @@ using Pos.Domain.Catalog;
 using Pos.Domain.Inventory;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
+using Pos.Domain.Returns;
 using Pos.Domain.Sales;
 
 namespace Pos.Application.Common;
@@ -24,6 +25,8 @@ public interface IPosDbContext
     DbSet<Store> Stores { get; }
     DbSet<StockTransaction> StockTransactions { get; }
     DbSet<StockBalance> StockBalances { get; }
+    DbSet<ReturnOrder> ReturnOrders { get; }
+    DbSet<ReturnLine> ReturnLines { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

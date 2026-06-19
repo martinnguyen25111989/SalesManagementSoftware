@@ -4,6 +4,7 @@ using Pos.Domain.Catalog;
 using Pos.Domain.Inventory;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
+using Pos.Domain.Returns;
 using Pos.Domain.Sales;
 
 namespace Pos.Application.Tests.Support;
@@ -28,6 +29,8 @@ public sealed class TestPosDbContext : DbContext, IPosDbContext
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
     public DbSet<StockBalance> StockBalances => Set<StockBalance>();
+    public DbSet<ReturnOrder> ReturnOrders => Set<ReturnOrder>();
+    public DbSet<ReturnLine> ReturnLines => Set<ReturnLine>();
 
     public static TestPosDbContext Create() =>
         new(new DbContextOptionsBuilder<TestPosDbContext>()
