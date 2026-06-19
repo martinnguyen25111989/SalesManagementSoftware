@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin.json",
+  "name": "my-plugin",
+  "version": "0.1.0",
+  "description": "Plugin mẫu của dự án POS. Thêm commands/, skills/, agents/ vào đây để đóng gói & chia sẻ.",
+  "commands": [],
+  "skills": [],
+  "agents": []
+}

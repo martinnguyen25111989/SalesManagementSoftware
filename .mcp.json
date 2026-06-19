@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json.schemastore.org/mcp.json",
+  "//": "Khai báo MCP server dùng chung cho dự án. Điền khi cần (vd: postgres, fetch...).",
+  "mcpServers": {}
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "pos-internal",
+  "version": "0.1.0",
+  "description": "Plugin nội bộ cho dự án POS — gom commands/skills/agents dùng chung cho team.",
+  "author": "SalesManagementSoftware team",
+  "plugins": [
+    "./my-plugin"
+  ]
+}

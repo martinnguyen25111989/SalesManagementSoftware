@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Git pre-commit hook — cổng quét secret (deterministic) cho dự án POS.
+# Bật 1 lần:  git config core.hooksPath .claude/hooks
+# Bỏ qua khẩn cấp 1 commit:  git commit --no-verify
+set -euo pipefail
+
+# Chặn commit nhầm các file chứa secret
+BLOCK_FILES_REGEX='(^|/)(\.env$|appsettings\..*\.json$|secrets\.json$|.*\.user$)'
+
+# Pattern secret phổ biến trong nội dung staged
+SECRET_PATTERNS=(
+  'SecretKey"[[:space:]]*:[[:space:]]*"[^"<]'      # Jwt SecretKey có giá trị thật
+  'Password=[^;"[:space:]]'                         # connection string có mật khẩu
+  'PRIVATE KEY-----'
+  'AKIA[0-9A-Z]{16}'                               # AWS access key
+  'xox[baprs]-[0-9A-Za-z-]+'                       # Slack token
+)
+
+fail=0
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+
+for f in $staged; do
+  if echo "$f" | grep -Eq "$BLOCK_FILES_REGEX"; then
+    echo "❌ Không được commit file secret: $f"
+    fail=1
+  fi
+done
+
+for f in $staged; do
+  # bỏ qua chính file template & hook
+  case "$f" in .env.example|.claude/hooks/*) continue;; esac
+  [ -f "$f" ] || continue
+  for p in "${SECRET_PATTERNS[@]}"; do
+    if git show ":$f" 2>/dev/null | grep -Eq "$p"; then
+      echo "❌ Nghi có secret trong $f (pattern: $p)"
+      fail=1
+    fi
+  done
+done
+
+if [ "$fail" -ne 0 ]; then
+  echo ""
+  echo "🚫 Commit bị chặn. Gỡ secret hoặc dùng .env / User Secrets."
+  echo "   (Khẩn cấp: git commit --no-verify)"
+  exit 1
+fi
+
+echo "✅ pre-commit: không phát hiện secret."
+exit 0
