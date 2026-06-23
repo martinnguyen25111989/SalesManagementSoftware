@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Pos.Application;
 using Pos.Application.Common;
+using Pos.Infrastructure.Invoicing.EasyInvoice;
 using Pos.Infrastructure.Persistence;
 using Pos.Infrastructure.Persistence.Seed;
 
@@ -17,6 +18,10 @@ builder.Services.AddScoped<IPosDbContext>(sp => sp.GetRequiredService<PosDbConte
 
 // CQRS (MediatR) handlers của tầng Application.
 builder.Services.AddApplication();
+
+// B11-A: cắm adapter HĐĐT EasyInvoice nếu đã cấu hình (section "EInvoice"); chưa cấu hình →
+// giữ NullEInvoiceProvider (offline, đơn vào hàng đợi Pending) — máy tính tiền kết nối thuế bật sau.
+builder.Services.AddEasyInvoice(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
