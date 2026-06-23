@@ -33,6 +33,9 @@ public class StockBalance : EntityBase
     public Guid VariantId { get; set; }
     public Guid StoreId { get; set; }
     public decimal Quantity { get; set; }
+
+    /// <summary>Giá vốn bình quân gia quyền di động (B8) — cập nhật mỗi lần nhập, dùng làm giá vốn khi bán.</summary>
+    public decimal AvgCost { get; set; }
 }
 
 /// <summary>Phiếu nhập hàng (GRN) từ nhà cung cấp, có giá vốn.</summary>

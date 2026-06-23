@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Pos.Application.Common;
 using Pos.Domain.Catalog;
+using Pos.Domain.Customers;
 using Pos.Domain.Inventory;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
@@ -34,6 +35,11 @@ public sealed class TestPosDbContext : DbContext, IPosDbContext
     public DbSet<GrnLine> GrnLines => Set<GrnLine>();
     public DbSet<ReturnOrder> ReturnOrders => Set<ReturnOrder>();
     public DbSet<ReturnLine> ReturnLines => Set<ReturnLine>();
+    public DbSet<CustomerTier> CustomerTiers => Set<CustomerTier>();
+    public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<Receivable> Receivables => Set<Receivable>();
+    public DbSet<LoyaltyTxn> LoyaltyTxns => Set<LoyaltyTxn>();
+    public DbSet<DebtPayment> DebtPayments => Set<DebtPayment>();
 
     public static TestPosDbContext Create() =>
         new(new DbContextOptionsBuilder<TestPosDbContext>()

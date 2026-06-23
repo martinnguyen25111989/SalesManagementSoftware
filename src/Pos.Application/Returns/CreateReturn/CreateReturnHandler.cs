@@ -68,6 +68,7 @@ public sealed class CreateReturnHandler : IRequestHandler<CreateReturnCommand, R
             StoreId = order.StoreId,
             DeviceId = cmd.DeviceId,
             OriginalOrderId = order.Id,
+            ShiftId = cmd.ShiftId,
             Reason = cmd.Reason,
             RefundMethod = cmd.RefundMethod,
             ApprovedBy = cmd.ApprovedBy,
@@ -105,7 +106,7 @@ public sealed class CreateReturnHandler : IRequestHandler<CreateReturnCommand, R
             // B8: nhập lại tồn (append-only) qua StockLedger, trừ hàng lỗi/hủy.
             if (input.RestockToInventory)
                 await StockLedger.ApplyAsync(_db, order.StoreId, ol.VariantId, input.Qty,
-                    StockTransactionType.Return, returnOrder.Id, cmd.DeviceId, 0m, ct);
+                    StockTransactionType.Return, returnOrder.Id, cmd.DeviceId, null, ct);
 
             returnedNow[ol.Id] = input.Qty;
             lineResults.Add(new ReturnLineResult(ol.Id, ol.VariantId, input.Qty, refund, input.RestockToInventory));
@@ -121,6 +122,9 @@ public sealed class CreateReturnHandler : IRequestHandler<CreateReturnCommand, R
             shift.ExpectedCash -= refundTotal;
             shift.MarkModified();
         }
+
+        // B10: thu hồi điểm đã tích tương ứng phần hoàn (không làm âm điểm sai).
+        await Customers.Loyalty.LoyaltyService.RevokeForReturnAsync(_db, order, refundTotal, ct);
 
         // Cập nhật trạng thái hóa đơn gốc: trả toàn phần hay một phần (B4).
         bool fullyReturned = order.Lines.All(l =>

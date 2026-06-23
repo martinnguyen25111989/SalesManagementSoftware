@@ -37,3 +37,15 @@ public class LoyaltyTxn : EntityBase
     public Guid? OrderId { get; set; }
     public int PointChange { get; set; }
 }
+
+/// <summary>Lịch sử trả nợ (B10) — 1 lần khách thanh toán công nợ, phân bổ vào các Receivable.</summary>
+public class DebtPayment : TransactionEntity
+{
+    public Guid CustomerId { get; set; }
+    public decimal Amount { get; set; }
+    public PaymentMethod Method { get; set; } = PaymentMethod.Cash;
+
+    /// <summary>Ca thu nợ (nếu trả tiền mặt tại quầy) — để hạch toán vào quỹ (B9).</summary>
+    public Guid? ShiftId { get; set; }
+    public DateTime PaidAt { get; set; } = DateTime.UtcNow;
+}

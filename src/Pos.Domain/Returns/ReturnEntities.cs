@@ -6,6 +6,9 @@ namespace Pos.Domain.Returns;
 public class ReturnOrder : TransactionEntity
 {
     public Guid OriginalOrderId { get; set; }
+
+    /// <summary>Ca xử lý trả hàng (B9) — để hạch toán hoàn tiền mặt vào quỹ &amp; X/Z report.</summary>
+    public Guid ShiftId { get; set; }
     public string? Reason { get; set; }
     public decimal RefundAmount { get; set; }
     public PaymentMethod RefundMethod { get; set; }

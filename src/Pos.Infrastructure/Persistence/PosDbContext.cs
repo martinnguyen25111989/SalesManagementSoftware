@@ -64,6 +64,7 @@ public class PosDbContext : DbContext, IPosDbContext
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Receivable> Receivables => Set<Receivable>();
     public DbSet<LoyaltyTxn> LoyaltyTxns => Set<LoyaltyTxn>();
+    public DbSet<DebtPayment> DebtPayments => Set<DebtPayment>();
 
     // Invoicing
     public DbSet<EInvoice> EInvoices => Set<EInvoice>();

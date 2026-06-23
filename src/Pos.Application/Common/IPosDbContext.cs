@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Pos.Domain.Catalog;
+using Pos.Domain.Customers;
 using Pos.Domain.Inventory;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
@@ -30,6 +31,11 @@ public interface IPosDbContext
     DbSet<GrnLine> GrnLines { get; }
     DbSet<ReturnOrder> ReturnOrders { get; }
     DbSet<ReturnLine> ReturnLines { get; }
+    DbSet<CustomerTier> CustomerTiers { get; }
+    DbSet<Customer> Customers { get; }
+    DbSet<Receivable> Receivables { get; }
+    DbSet<LoyaltyTxn> LoyaltyTxns { get; }
+    DbSet<DebtPayment> DebtPayments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

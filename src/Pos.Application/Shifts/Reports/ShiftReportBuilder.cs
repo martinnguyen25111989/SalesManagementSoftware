@@ -10,9 +10,11 @@ internal static class ShiftReportBuilder
 {
     public static async Task<ShiftReport> BuildAsync(IPosDbContext db, Shift shift, CancellationToken ct)
     {
-        // Đơn đã hoàn tất trong ca + thanh toán.
+        // Đơn đã thu tiền trong ca: tính cả đơn sau đó bị trả một phần/toàn phần — tiền bán vẫn đã
+        // vào quỹ trong ca này; phần hoàn được hạch toán riêng ở CashRefunds (tránh "mất" doanh thu).
         var orders = await db.Orders
-            .Where(o => o.ShiftId == shift.Id && o.Status == OrderStatus.Completed)
+            .Where(o => o.ShiftId == shift.Id && (o.Status == OrderStatus.Completed
+                || o.Status == OrderStatus.PartiallyReturned || o.Status == OrderStatus.Returned))
             .Include(o => o.Payments)
             .ToListAsync(ct);
 
@@ -29,6 +31,11 @@ internal static class ShiftReportBuilder
         decimal cashIn = movements.Where(m => m.Type == CashMovementType.In).Sum(m => m.Amount);
         decimal cashOut = movements.Where(m => m.Type == CashMovementType.Out).Sum(m => m.Amount);
 
+        // Hoàn tiền mặt cho hàng trả trong ca (B7/B9) — chỉ phần hoàn bằng tiền mặt rời quỹ.
+        decimal cashRefunds = await db.ReturnOrders
+            .Where(r => r.ShiftId == shift.Id && r.RefundMethod == PaymentMethod.Cash)
+            .SumAsync(r => r.RefundAmount, ct);
+
         return new ShiftReport(
             ShiftId: shift.Id,
             StoreId: shift.StoreId,
@@ -41,7 +48,7 @@ internal static class ShiftReportBuilder
             CashSales: cashSales,
             CashIn: cashIn,
             CashOut: cashOut,
-            CashRefunds: 0m, // hoàn tiền mặt (B7) — bổ sung khi có nghiệp vụ trả hàng
+            CashRefunds: cashRefunds, // hoàn tiền mặt cho hàng trả trong ca (B7/B9) — đã rời quỹ
             ExpectedCash: shift.ExpectedCash,
             CountedCash: shift.CloseAt is null ? null : shift.CountedCash,
             Variance: shift.CloseAt is null ? null : shift.Variance,

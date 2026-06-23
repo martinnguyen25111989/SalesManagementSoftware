@@ -12,7 +12,7 @@ namespace Pos.Application.Inventory.Queries;
 public sealed record GetStockOnHandQuery(Guid StoreId, Guid? VariantId = null, bool FromLedger = false)
     : IRequest<IReadOnlyList<StockOnHandItem>>;
 
-public sealed record StockOnHandItem(Guid VariantId, decimal OnHand);
+public sealed record StockOnHandItem(Guid VariantId, decimal OnHand, decimal AvgCost = 0m);
 
 public sealed class GetStockOnHandHandler : IRequestHandler<GetStockOnHandQuery, IReadOnlyList<StockOnHandItem>>
 {
@@ -27,14 +27,14 @@ public sealed class GetStockOnHandHandler : IRequestHandler<GetStockOnHandQuery,
             var ledger = await _db.StockTransactions
                 .Where(s => s.StoreId == q.StoreId && (q.VariantId == null || s.VariantId == q.VariantId))
                 .GroupBy(s => s.VariantId)
-                .Select(g => new StockOnHandItem(g.Key, g.Sum(x => x.QtyChange)))
+                .Select(g => new StockOnHandItem(g.Key, g.Sum(x => x.QtyChange), 0m))
                 .ToListAsync(ct);
             return ledger;
         }
 
         var balances = await _db.StockBalances
             .Where(b => b.StoreId == q.StoreId && (q.VariantId == null || b.VariantId == q.VariantId))
-            .Select(b => new StockOnHandItem(b.VariantId, b.Quantity))
+            .Select(b => new StockOnHandItem(b.VariantId, b.Quantity, b.AvgCost))
             .ToListAsync(ct);
         return balances;
     }

@@ -2,6 +2,7 @@ using Pos.Application.Orders.CheckoutOrder;
 using Pos.Application.Orders.CreateOrder;
 using Pos.Domain.Catalog;
 using Pos.Domain.Common;
+using Pos.Domain.Customers;
 using Pos.Domain.Inventory;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
@@ -94,5 +95,24 @@ internal static class TestData
             Payments = new[] { new PaymentInput(PaymentMethod.Cash, order!.GrandTotal) },
         }, default);
         return id;
+    }
+
+    /// <summary>Thêm 1 khách hàng (B10) với hạn mức tín dụng; trả về CustomerId.</summary>
+    public static async Task<Guid> AddCustomerAsync(
+        TestPosDbContext db, decimal creditLimit = 0m, string phone = "0900000001")
+    {
+        var id = Guid.NewGuid();
+        db.Customers.Add(new Customer { Id = id, Name = "KH Demo", Phone = phone, CreditLimit = creditLimit });
+        await db.SaveChangesAsync();
+        return id;
+    }
+
+    /// <summary>Bật tích điểm cho chi nhánh: 1 điểm / <paramref name="vndPerPoint"/> đồng doanh thu.</summary>
+    public static async Task EnableLoyaltyAsync(TestPosDbContext db, decimal vndPerPoint, bool onGrandTotal = false)
+    {
+        var store = await db.Stores.FindAsync(StoreId);
+        store!.LoyaltyVndPerPoint = vndPerPoint;
+        store.LoyaltyEarnOnGrandTotal = onGrandTotal;
+        await db.SaveChangesAsync();
     }
 }

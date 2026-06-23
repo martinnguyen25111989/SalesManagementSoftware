@@ -28,11 +28,13 @@ public sealed class TransferStockHandler : IRequestHandler<TransferStockCommand,
 
         foreach (var l in cmd.Lines)
         {
+            // Giá vốn theo hàng đi: lấy bình quân kho nguồn để kho đích blend đúng (B8) — đọc trước khi xuất.
+            decimal sourceAvg = await StockLedger.AvgCostAsync(_db, cmd.FromStoreId, l.VariantId, ct);
             // Hai vế ghi cùng SaveChanges → khớp tuyệt đối, không mất hàng giữa 2 kho.
             await StockLedger.ApplyAsync(_db, cmd.FromStoreId, l.VariantId, -l.Qty,
-                StockTransactionType.TransferOut, cmd.TransferId, cmd.DeviceId, 0m, ct);
+                StockTransactionType.TransferOut, cmd.TransferId, cmd.DeviceId, null, ct);
             await StockLedger.ApplyAsync(_db, cmd.ToStoreId, l.VariantId, l.Qty,
-                StockTransactionType.TransferIn, cmd.TransferId, cmd.DeviceId, 0m, ct);
+                StockTransactionType.TransferIn, cmd.TransferId, cmd.DeviceId, sourceAvg, ct);
         }
 
         await _db.SaveChangesAsync(ct);

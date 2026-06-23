@@ -1,8 +1,10 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Pos.Application.Common;
+using Pos.Application.Customers.Loyalty;
 using Pos.Application.Inventory;
 using Pos.Domain.Common;
+using Pos.Domain.Customers;
 using Pos.Domain.Sales;
 
 namespace Pos.Application.Orders.CheckoutOrder;
@@ -56,6 +58,10 @@ public sealed class CheckoutOrderHandler : IRequestHandler<CheckoutOrderCommand,
             throw new BusinessRuleException(
                 $"Thanh toán {unconfirmed.Method} cần mã tham chiếu xác nhận đã nhận tiền (B6).");
 
+        // B10: đổi điểm làm phương thức thanh toán chưa hỗ trợ — không nhận thầm để khỏi "tiêu" điểm sai.
+        if (cmd.Payments.Any(p => p.Method == PaymentMethod.Point))
+            throw new BusinessRuleException("Thanh toán bằng điểm chưa được hỗ trợ.");
+
         var now = DateTime.UtcNow;
 
         // Ghi nhận thanh toán. PK là GUID client-gen (non-default) → phải Add tường minh,
@@ -74,11 +80,58 @@ public sealed class CheckoutOrderHandler : IRequestHandler<CheckoutOrderCommand,
             _db.Payments.Add(payment);     // ép trạng thái Added
         }
 
+        // B10: bán chịu (Debt) — cần KH có hồ sơ + còn hạn mức; vượt hạn mức cần Manager duyệt.
+        decimal debtAmount = cmd.Payments.Where(p => p.Method == PaymentMethod.Debt).Sum(p => p.Amount);
+        if (debtAmount > 0m)
+        {
+            if (order.CustomerId is not { } customerId)
+                throw new BusinessRuleException("Bán chịu cần khách hàng có hồ sơ (B10).");
+
+            var customer = await _db.Customers.FirstOrDefaultAsync(c => c.Id == customerId, ct)
+                ?? throw new NotFoundException($"Không tìm thấy khách hàng {customerId}.");
+
+            decimal outstanding = await _db.Receivables
+                .Where(r => r.CustomerId == customerId)
+                .SumAsync(r => r.Outstanding, ct);
+            decimal available = customer.CreditLimit - outstanding;
+            if (debtAmount > available && !cmd.ManagerApproved)
+                throw new BusinessRuleException(
+                    $"Bán chịu {debtAmount:N0} vượt hạn mức còn lại {available:N0} — cần Manager duyệt (B10).");
+
+            _db.Receivables.Add(new Receivable
+            {
+                CustomerId = customerId,
+                OrderId = order.Id,
+                Amount = debtAmount,
+                Paid = 0m,
+                Outstanding = debtAmount,
+                DueDate = cmd.DebtDueDate,
+            });
+        }
+
+        // B8: chính sách bán âm kho theo cấu hình chi nhánh (chặn / cảnh báo + cần quyền / cho qua).
+        var store = await _db.Stores.FirstOrDefaultAsync(s => s.Id == order.StoreId, ct)
+            ?? throw new NotFoundException($"Không tìm thấy chi nhánh {order.StoreId}.");
+        if (store.NegativeStockPolicy != NegativeStockPolicy.Allow)
+        {
+            foreach (var line in order.Lines)
+            {
+                decimal onHand = await StockLedger.OnHandAsync(_db, order.StoreId, line.VariantId, ct);
+                if (line.Qty <= onHand) continue;
+                if (store.NegativeStockPolicy == NegativeStockPolicy.Block)
+                    throw new BusinessRuleException(
+                        $"Tồn không đủ (còn {onHand:N0}, cần {line.Qty:N0}) — chi nhánh chặn bán âm kho (B8).");
+                if (!cmd.ManagerApproved) // Warn
+                    throw new BusinessRuleException(
+                        $"Bán vượt tồn (còn {onHand:N0}, cần {line.Qty:N0}) — cần Manager duyệt (B8).");
+            }
+        }
+
         // B8: trừ tồn append-only qua StockLedger (Sale, QtyChange âm). Quy đổi đơn vị 1:1
-        //     (chưa hỗ trợ UnitConversion); giá vốn = 0 (tính sau). Bán âm kho: mặc định cho qua.
+        //     (chưa hỗ trợ UnitConversion); giá vốn đóng dấu theo bình quân hiện hành (acquisitionCost=null).
         foreach (var line in order.Lines)
             await StockLedger.ApplyAsync(_db, order.StoreId, line.VariantId, -line.Qty,
-                StockTransactionType.Sale, order.Id, order.DeviceId, 0m, ct);
+                StockTransactionType.Sale, order.Id, order.DeviceId, null, ct);
 
         // B9: cập nhật tiền mặt dự kiến của ca theo phần thu tiền mặt.
         decimal cashAmount = cmd.Payments.Where(p => p.Method == PaymentMethod.Cash).Sum(p => p.Amount);
@@ -89,8 +142,14 @@ public sealed class CheckoutOrderHandler : IRequestHandler<CheckoutOrderCommand,
         }
 
         order.Status = OrderStatus.Completed;
-        order.PaymentStatus = PaymentStatus.Paid;
+        // B10: phần bán chịu chưa thu tiền → đơn hoàn tất nhưng công nợ chưa trả (Unpaid/Partial).
+        order.PaymentStatus = debtAmount <= 0m ? PaymentStatus.Paid
+            : debtAmount >= order.GrandTotal ? PaymentStatus.Unpaid
+            : PaymentStatus.Partial;
         Touch(order);
+
+        // B10: tích điểm theo doanh thu thực (no-op nếu khách lẻ / chi nhánh tắt tích điểm).
+        await LoyaltyService.AccrueAsync(_db, store, order, ct);
 
         await _db.SaveChangesAsync(ct);
         return BuildResult(order, cmd.CashTendered);

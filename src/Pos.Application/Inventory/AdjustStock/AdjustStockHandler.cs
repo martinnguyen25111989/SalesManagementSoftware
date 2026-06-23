@@ -35,7 +35,7 @@ public sealed class AdjustStockHandler : IRequestHandler<AdjustStockCommand, Adj
 
         // Ghi biến động chênh lệch (kể cả 0 để lưu vết đã kiểm kê).
         await StockLedger.ApplyAsync(_db, cmd.StoreId, cmd.VariantId, diff,
-            StockTransactionType.StockTake, cmd.AdjustId, cmd.DeviceId, 0m, ct);
+            StockTransactionType.StockTake, cmd.AdjustId, cmd.DeviceId, null, ct);
 
         await _db.SaveChangesAsync(ct);
 

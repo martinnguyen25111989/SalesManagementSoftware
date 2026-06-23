@@ -17,6 +17,12 @@ public sealed record CheckoutOrderCommand : IRequest<CheckoutResult>
 
     /// <summary>Tiền khách đưa (tiền mặt) để tính tiền thối; null = không tính.</summary>
     public decimal? CashTendered { get; init; }
+
+    /// <summary>B8/B10: Manager duyệt — bán vượt tồn (chính sách Warn) hoặc bán chịu vượt hạn mức.</summary>
+    public bool ManagerApproved { get; init; }
+
+    /// <summary>B10: hạn trả nợ cho phần bán chịu (PaymentMethod.Debt); null = không kỳ hạn.</summary>
+    public DateTime? DebtDueDate { get; init; }
 }
 
 public sealed record PaymentInput(PaymentMethod Method, decimal Amount, string? ExternalRef = null);

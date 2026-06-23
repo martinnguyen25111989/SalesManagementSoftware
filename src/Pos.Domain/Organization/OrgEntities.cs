@@ -20,6 +20,15 @@ public class Store : EntityBase
     public string? TaxCode { get; set; }
     public string? Address { get; set; }
 
+    /// <summary>B8 — xử lý khi bán làm tồn về âm (mặc định Allow cho offline-first).</summary>
+    public NegativeStockPolicy NegativeStockPolicy { get; set; } = NegativeStockPolicy.Allow;
+
+    /// <summary>B10 — số VND doanh thu cho 1 điểm tích lũy (0 = tắt tích điểm).</summary>
+    public decimal LoyaltyVndPerPoint { get; set; }
+
+    /// <summary>B10 — true = tích điểm trên tổng có thuế (GrandTotal); false = trên doanh thu sau CK trước thuế.</summary>
+    public bool LoyaltyEarnOnGrandTotal { get; set; }
+
     public ICollection<Register> Registers { get; set; } = new List<Register>();
 }
 

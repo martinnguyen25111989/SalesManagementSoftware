@@ -22,6 +22,12 @@ public enum PromotionType { PercentLine, AmountLine, OrderDiscount, Bogo, QtyTie
 
 public enum StockTransactionType { Sale, Purchase, Return, Adjust, StockTake, TransferIn, TransferOut, Void }
 
+/// <summary>
+/// B8 — chính sách bán khi tồn về âm theo từng chi nhánh:
+/// Allow = cho qua (offline-first, mặc định); Warn = cần Manager duyệt; Block = chặn cứng.
+/// </summary>
+public enum NegativeStockPolicy { Allow, Warn, Block }
+
 public enum EInvoiceType { Original, Adjust, Replace, Cancel }
 
 public enum EInvoiceStatus { Pending, Issued, Sent, Rejected, Canceled }
