@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Pos.Domain.Catalog;
 using Pos.Domain.Customers;
 using Pos.Domain.Inventory;
+using Pos.Domain.Invoicing;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
 using Pos.Domain.Returns;
@@ -36,6 +37,7 @@ public interface IPosDbContext
     DbSet<Receivable> Receivables { get; }
     DbSet<LoyaltyTxn> LoyaltyTxns { get; }
     DbSet<DebtPayment> DebtPayments { get; }
+    DbSet<EInvoice> EInvoices { get; }
 
     Task<int> SaveChangesAsync(CancellationToken ct = default);
 }

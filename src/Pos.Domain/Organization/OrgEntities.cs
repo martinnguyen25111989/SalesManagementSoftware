@@ -29,6 +29,12 @@ public class Store : EntityBase
     /// <summary>B10 — true = tích điểm trên tổng có thuế (GrandTotal); false = trên doanh thu sau CK trước thuế.</summary>
     public bool LoyaltyEarnOnGrandTotal { get; set; }
 
+    /// <summary>B11/TT78 — mẫu số hóa đơn (vd "1" = HĐ GTGT).</summary>
+    public string InvoiceTemplateCode { get; set; } = string.Empty;
+
+    /// <summary>B11/TT78 — ký hiệu hóa đơn 6 ký tự sau mẫu số, gồm 'M' nếu từ máy tính tiền (vd "C25MAA").</summary>
+    public string InvoiceSerial { get; set; } = string.Empty;
+
     public ICollection<Register> Registers { get; set; } = new List<Register>();
 }
 

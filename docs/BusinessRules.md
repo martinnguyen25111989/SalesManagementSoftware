@@ -355,7 +355,7 @@ Completed ──refund/return──► Returned (toàn phần) / PartiallyReturn
 
 ---
 
-## B7. Trả hàng / Đổi hàng / Hoàn tiền (Return / Refund)
+1
 
 > Nghiệp vụ phức tạp nhất về dữ liệu — phải đúng cả tồn kho, doanh thu **và hóa đơn điện tử**.
 

@@ -3,6 +3,7 @@ using Pos.Application.Common;
 using Pos.Domain.Catalog;
 using Pos.Domain.Customers;
 using Pos.Domain.Inventory;
+using Pos.Domain.Invoicing;
 using Pos.Domain.Operations;
 using Pos.Domain.Organization;
 using Pos.Domain.Returns;
@@ -40,6 +41,7 @@ public sealed class TestPosDbContext : DbContext, IPosDbContext
     public DbSet<Receivable> Receivables => Set<Receivable>();
     public DbSet<LoyaltyTxn> LoyaltyTxns => Set<LoyaltyTxn>();
     public DbSet<DebtPayment> DebtPayments => Set<DebtPayment>();
+    public DbSet<EInvoice> EInvoices => Set<EInvoice>();
 
     public static TestPosDbContext Create() =>
         new(new DbContextOptionsBuilder<TestPosDbContext>()

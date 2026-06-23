@@ -22,6 +22,14 @@ public class EInvoice : TransactionEntity
     public Guid? OriginalInvoiceId { get; set; }
     public EInvoiceStatus Status { get; set; } = EInvoiceStatus.Pending;
 
+    /// <summary>Khóa giao dịch NCC trả về (đối soát/tra cứu idempotent khi retry).</summary>
+    public string? ProviderRef { get; set; }
+
+    /// <summary>Lý do bị từ chối (Rejected) hoặc lỗi mạng gần nhất (còn Pending) để hiển thị/đối soát.</summary>
+    public string? ErrorMessage { get; set; }
+
+    public DateTime? IssuedAt { get; set; }
+
     public string? XmlPath { get; set; }
     public string? PdfPath { get; set; }
 }
