@@ -142,7 +142,7 @@ public partial class ReportsViewModel : ViewModelBase
 
             Payments.Clear();
             foreach (var p in payments)
-                Payments.Add(new PaymentRow(MethodLabel(p.Method), p.Gross, p.Refunds, p.Net));
+                Payments.Add(new PaymentRow(PaymentMethodNames.Label(p.Method), p.Gross, p.Refunds, p.Net));
 
             TaxRows.Clear();
             foreach (var t in tax.TaxByRate) TaxRows.Add(t);
@@ -165,16 +165,6 @@ public partial class ReportsViewModel : ViewModelBase
         }
     }
 
-    private static string MethodLabel(PaymentMethod m) => m switch
-    {
-        PaymentMethod.Cash => "Tiền mặt",
-        PaymentMethod.Card => "Thẻ",
-        PaymentMethod.VietQR => "VietQR",
-        PaymentMethod.Wallet => "Ví điện tử",
-        PaymentMethod.Debt => "Ghi nợ",
-        PaymentMethod.Point => "Điểm",
-        _ => m.ToString(),
-    };
 }
 
 /// <summary>Dòng doanh thu theo thu ngân đã giải tên (B12).</summary>

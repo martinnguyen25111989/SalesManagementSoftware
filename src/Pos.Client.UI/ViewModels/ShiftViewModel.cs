@@ -93,7 +93,7 @@ public partial class ShiftViewModel : ViewModelBase
 
             Payments.Clear();
             foreach (var kv in r.PaymentsByMethod)
-                Payments.Add(new PaymentRow(MethodLabel(kv.Key), kv.Value, 0m, kv.Value));
+                Payments.Add(new PaymentRow(PaymentMethodNames.Label(kv.Key), kv.Value, 0m, kv.Value));
 
             OnPropertyChanged(nameof(CanCloseVariance));
         }
@@ -172,14 +172,4 @@ public partial class ShiftViewModel : ViewModelBase
         catch (Exception ex) { StatusMessage = "Lỗi: " + ex.Message; }
     }
 
-    private static string MethodLabel(PaymentMethod m) => m switch
-    {
-        PaymentMethod.Cash => "Tiền mặt",
-        PaymentMethod.Card => "Thẻ",
-        PaymentMethod.VietQR => "VietQR",
-        PaymentMethod.Wallet => "Ví điện tử",
-        PaymentMethod.Debt => "Ghi nợ",
-        PaymentMethod.Point => "Điểm",
-        _ => m.ToString(),
-    };
 }

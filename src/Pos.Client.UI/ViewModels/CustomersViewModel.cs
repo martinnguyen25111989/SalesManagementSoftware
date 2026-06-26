@@ -78,10 +78,13 @@ public partial class CustomersViewModel : ViewModelBase
             var db = scope.ServiceProvider.GetRequiredService<PosDbContext>();
 
             var customers = await db.Customers.OrderBy(c => c.Name).ToListAsync();
-            var debt = await db.Receivables
+            // Gom dư nợ phía client: SQLite (offline) KHÔNG dịch được SUM(decimal) phía server.
+            var debt = (await db.Receivables
+                    .Where(r => r.Outstanding != 0m)
+                    .Select(r => new { r.CustomerId, r.Outstanding })
+                    .ToListAsync())
                 .GroupBy(r => r.CustomerId)
-                .Select(g => new { g.Key, Sum = g.Sum(x => x.Outstanding) })
-                .ToDictionaryAsync(x => x.Key, x => x.Sum);
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Outstanding));
 
             _all = customers.Select(c => new CustomerRow(
                 c.Id, c.Name, c.Phone, c.TaxCode, c.CreditLimit, c.PointBalance,
