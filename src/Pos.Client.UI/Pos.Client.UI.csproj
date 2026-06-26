@@ -8,7 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
 
@@ -22,10 +21,15 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.10" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Pos.Client.Core\Pos.Client.Core.csproj" />
     <ProjectReference Include="..\Pos.Hardware.Abstractions\Pos.Hardware.Abstractions.csproj" />
+    <!-- Nghiệp vụ (handlers B4–B13) + hạ tầng EF (PosDbContext) cho bán hàng động trên SQLite offline. -->
+    <ProjectReference Include="..\Pos.Application\Pos.Application.csproj" />
+    <ProjectReference Include="..\Pos.Infrastructure\Pos.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

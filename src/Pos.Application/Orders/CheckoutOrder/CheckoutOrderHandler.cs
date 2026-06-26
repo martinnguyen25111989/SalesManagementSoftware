@@ -90,9 +90,12 @@ public sealed class CheckoutOrderHandler : IRequestHandler<CheckoutOrderCommand,
             var customer = await _db.Customers.FirstOrDefaultAsync(c => c.Id == customerId, ct)
                 ?? throw new NotFoundException($"Không tìm thấy khách hàng {customerId}.");
 
-            decimal outstanding = await _db.Receivables
-                .Where(r => r.CustomerId == customerId)
-                .SumAsync(r => r.Outstanding, ct);
+            // Gom ở client: SQLite (store offline) không dịch được Sum(decimal) trong SQL.
+            decimal outstanding = (await _db.Receivables
+                    .Where(r => r.CustomerId == customerId)
+                    .Select(r => r.Outstanding)
+                    .ToListAsync(ct))
+                .Sum();
             decimal available = customer.CreditLimit - outstanding;
             if (debtAmount > available && !cmd.ManagerApproved)
                 throw new BusinessRuleException(

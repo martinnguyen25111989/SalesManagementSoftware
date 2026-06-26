@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Pos.Client.UI.ViewModels"
+             xmlns:conv="using:Pos.Client.UI.Converters"
+             mc:Ignorable="d" d:DesignWidth="1070" d:DesignHeight="800"
+             x:Class="Pos.Client.UI.Views.ShiftView"
+             x:DataType="vm:ShiftViewModel">
+
+    <UserControl.Resources>
+        <conv:VndConverter x:Key="Vnd"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Border.card">
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+        <Style Selector="TextBlock.lbl">
+            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+        <Style Selector="TextBlock.val">
+            <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="FontSize" Value="16"/>
+        </Style>
+    </UserControl.Styles>
+
+    <ScrollViewer Background="{StaticResource Page}">
+        <Grid RowDefinitions="Auto,Auto,Auto" Margin="14" ColumnDefinitions="*">
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Margin="2,0,2,12">
+                <TextBlock Text="Ca làm việc &amp; Quỹ tiền" Classes="h1"/>
+                <TextBlock Text="{Binding ReportKind}" Foreground="{StaticResource BrandDark}" FontWeight="SemiBold"/>
+            </StackPanel>
+
+            <!-- Báo cáo ca (X/Z) -->
+            <Border Grid.Row="1" Classes="card" Margin="0,0,0,12">
+                <Grid RowDefinitions="Auto,Auto,Auto">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,*,*,*" Margin="0,0,0,8">
+                        <StackPanel Grid.Column="0"><TextBlock Classes="lbl" Text="Mở ca"/><TextBlock Classes="val" Text="{Binding OpenAt, StringFormat='{}{0:dd/MM HH:mm}'}"/></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock Classes="lbl" Text="Số đơn"/><TextBlock Classes="val" Text="{Binding OrderCount}"/></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock Classes="lbl" Text="Doanh thu ca"/><TextBlock Classes="val" Foreground="{StaticResource BrandDark}"><Run Text="{Binding GrandTotalSales, Converter={StaticResource Vnd}}"/><Run Text=" đ"/></TextBlock></StackPanel>
+                        <StackPanel Grid.Column="3"><TextBlock Classes="lbl" Text="Quỹ đầu ca"/><TextBlock Classes="val"><Run Text="{Binding OpeningFloat, Converter={StaticResource Vnd}}"/><Run Text=" đ"/></TextBlock></StackPanel>
+                    </Grid>
+                    <Separator Grid.Row="1" Background="{StaticResource Line}" Margin="0,4"/>
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*,*,*" Margin="0,8,0,0">
+                        <StackPanel Grid.Column="0"><TextBlock Classes="lbl" Text="Bán tiền mặt"/><TextBlock Classes="val"><Run Text="{Binding CashSales, Converter={StaticResource Vnd}}"/></TextBlock></StackPanel>
+                        <StackPanel Grid.Column="1"><TextBlock Classes="lbl" Text="Thu thêm"/><TextBlock Classes="val"><Run Text="{Binding CashIn, Converter={StaticResource Vnd}}"/></TextBlock></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock Classes="lbl" Text="Chi"/><TextBlock Classes="val"><Run Text="{Binding CashOut, Converter={StaticResource Vnd}}"/></TextBlock></StackPanel>
+                        <StackPanel Grid.Column="3"><TextBlock Classes="lbl" Text="Hoàn tiền mặt"/><TextBlock Classes="val"><Run Text="{Binding CashRefunds, Converter={StaticResource Vnd}}"/></TextBlock></StackPanel>
+                        <StackPanel Grid.Column="4"><TextBlock Classes="lbl" Text="Tiền mặt dự kiến"/><TextBlock Classes="val" Foreground="{StaticResource BrandDark}"><Run Text="{Binding ExpectedCash, Converter={StaticResource Vnd}}"/></TextBlock></StackPanel>
+                        <StackPanel Grid.Column="5"><TextBlock Classes="lbl" Text="Lệch quỹ"/><TextBlock Classes="val" Foreground="#C0392B"><Run Text="{Binding Variance, Converter={StaticResource Vnd}}"/></TextBlock></StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- Hành động: thu/chi + đóng ca -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,*">
+
+                <!-- Thu/chi tiền mặt -->
+                <Border Grid.Column="0" Classes="card" Margin="0,0,6,0" IsVisible="{Binding !IsClosed}">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Thu / Chi tiền mặt trong ca" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <RadioButton GroupName="mv" Content="Thu (nộp quỹ)" IsChecked="{Binding IsCashIn}"/>
+                            <RadioButton GroupName="mv" Content="Chi (chi vặt/rút)" IsChecked="{Binding !IsCashIn}"/>
+                        </StackPanel>
+                        <TextBlock Classes="lbl" Text="Số tiền (đ)"/>
+                        <TextBox Text="{Binding MovementAmount}" Height="38" CornerRadius="8"/>
+                        <TextBlock Classes="lbl" Text="Lý do"/>
+                        <TextBox Text="{Binding MovementReason}" Height="38" CornerRadius="8" PlaceholderText="vd: nộp quỹ về két chính"/>
+                        <Button Content="Ghi thu/chi" Classes="primary" HorizontalAlignment="Right" Command="{Binding RecordMovementCommand}"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Đóng ca -->
+                <Border Grid.Column="1" Classes="card" Margin="6,0,0,0">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Đóng ca (Z-report)" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                        <TextBlock Classes="lbl" Text="Tiền mặt đếm thực tế cuối ca (đ)"/>
+                        <TextBox Text="{Binding CountedCash}" Height="38" CornerRadius="8" IsEnabled="{Binding !IsClosed}"/>
+                        <CheckBox Content="Manager duyệt (khi lệch quỹ vượt ngưỡng)" IsChecked="{Binding ManagerApproved}"
+                                  IsEnabled="{Binding !IsClosed}" IsVisible="{Binding CanCloseVariance}"/>
+                        <Button Content="Chốt &amp; đóng ca" Classes="danger" HorizontalAlignment="Right"
+                                Command="{Binding CloseShiftCommand}" IsVisible="{Binding !IsClosed}"/>
+                        <Button Content="Mở ca mới" Classes="primary" HorizontalAlignment="Right"
+                                Command="{Binding OpenNewShiftCommand}" IsVisible="{Binding IsClosed}"/>
+                        <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandDark}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

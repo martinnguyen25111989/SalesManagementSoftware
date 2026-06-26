@@ -19,12 +19,21 @@ public interface IPosDbContext
     DbSet<Order> Orders { get; }
     DbSet<OrderLine> OrderLines { get; }
     DbSet<Payment> Payments { get; }
+    DbSet<Category> Categories { get; }
+    DbSet<Product> Products { get; }
     DbSet<Variant> Variants { get; }
+    DbSet<Barcode> Barcodes { get; }
+    DbSet<PriceList> PriceLists { get; }
     DbSet<PriceItem> PriceItems { get; }
     DbSet<Shift> Shifts { get; }
     DbSet<CashMovement> CashMovements { get; }
     DbSet<Register> Registers { get; }
     DbSet<Store> Stores { get; }
+    DbSet<User> Users { get; }
+    DbSet<Role> Roles { get; }
+    DbSet<Permission> Permissions { get; }
+    DbSet<UserRole> UserRoles { get; }
+    DbSet<RolePermission> RolePermissions { get; }
     DbSet<StockTransaction> StockTransactions { get; }
     DbSet<StockBalance> StockBalances { get; }
     DbSet<Supplier> Suppliers { get; }

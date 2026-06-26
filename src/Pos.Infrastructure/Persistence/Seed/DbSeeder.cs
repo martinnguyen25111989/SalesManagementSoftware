@@ -68,6 +68,16 @@ public static class DbSeeder
         await db.SaveChangesAsync(ct);
     }
 
+    /// <summary>
+    /// Chỉ nạp cấu hình RBAC hệ thống (5 role + quyền theo B2) — KHÔNG kèm dữ liệu mẫu. Idempotent.
+    /// Dùng cho POS client: phân quyền là cấu hình hệ thống, không phải dữ liệu kinh doanh.
+    /// </summary>
+    public static async Task EnsureRolesAndPermissionsAsync(PosDbContext db, CancellationToken ct = default)
+    {
+        await SeedRolesAndPermissionsAsync(db, ct);
+        await db.SaveChangesAsync(ct);
+    }
+
     private static async Task SeedRolesAndPermissionsAsync(PosDbContext db, CancellationToken ct)
     {
         // Permissions

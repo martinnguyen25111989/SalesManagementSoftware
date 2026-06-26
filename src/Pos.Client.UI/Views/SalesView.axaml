@@ -1,0 +1,331 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Pos.Client.UI.ViewModels"
+             xmlns:conv="using:Pos.Client.UI.Converters"
+             xmlns:cat="using:Pos.Application.Catalog.Queries"
+             mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
+             x:Class="Pos.Client.UI.Views.SalesView"
+             x:DataType="vm:SalesViewModel">
+
+    <UserControl.Resources>
+        <conv:VndConverter x:Key="Vnd"/>
+        <SolidColorBrush x:Key="Brand" Color="#0E9D8A"/>
+        <SolidColorBrush x:Key="BrandDark" Color="#0B7E6F"/>
+        <SolidColorBrush x:Key="Ink" Color="#2A2F34"/>
+        <SolidColorBrush x:Key="Muted" Color="#8A9098"/>
+        <SolidColorBrush x:Key="Line" Color="#E6EAEE"/>
+        <SolidColorBrush x:Key="Page" Color="#E9EDF1"/>
+        <SolidColorBrush x:Key="Pay" Color="#27AE60"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Thẻ sản phẩm bán nhanh -->
+        <Style Selector="Button.tile">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.tile:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#E6F6F2"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Brand}"/>
+        </Style>
+
+        <!-- Nút tăng/giảm số lượng -->
+        <Style Selector="Button.step">
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="14"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Background" Value="#F0F4F3"/>
+            <Setter Property="Foreground" Value="{StaticResource BrandDark}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.step:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#D5ECE7"/>
+        </Style>
+
+        <!-- Chip danh mục -->
+        <Style Selector="Button.cat">
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Padding" Value="14,6"/>
+            <Setter Property="Margin" Value="3"/>
+            <Setter Property="Background" Value="#F0F4F3"/>
+            <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="TextBox">
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="TextBlock.label">
+            <Setter Property="Foreground" Value="{StaticResource Muted}"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="TextBlock.val">
+            <Setter Property="Foreground" Value="{StaticResource Ink}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="HorizontalAlignment" Value="Right"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*" Background="{StaticResource Page}">
+
+        <!-- ===== Header ===== -->
+        <Border Grid.Row="0" Background="{StaticResource Brand}" Height="60" BoxShadow="0 2 8 0 #22000000">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <TextBlock Grid.Column="0" Text="POS · Bán hàng" FontSize="18" FontWeight="Bold"
+                           Foreground="White" VerticalAlignment="Center" Margin="18,0"/>
+
+                <Border Grid.Column="1" Background="White" CornerRadius="20" Height="38"
+                        Margin="6,0" HorizontalAlignment="Left" Width="420" VerticalAlignment="Center">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <PathIcon Grid.Column="0" Width="15" Height="15" Margin="14,0,6,0"
+                                  Foreground="{StaticResource Muted}"
+                                  Data="M9.5 3a6.5 6.5 0 0 1 5.25 10.32l4.46 4.47a.75.75 0 0 1-1.06 1.06l-4.47-4.46A6.5 6.5 0 1 1 9.5 3Zm0 1.5a5 5 0 1 0 0 10 5 5 0 0 0 0-10Z"/>
+                        <TextBox Grid.Column="1" Text="{Binding SearchText}" PlaceholderText="Tìm hàng hóa (tên / mã)..."
+                                 BorderThickness="0" Background="Transparent" Foreground="{StaticResource Ink}"
+                                 Height="38" VerticalContentAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="14" Margin="18,0"
+                            VerticalAlignment="Center">
+                    <Border Background="#0B7E6F" CornerRadius="12" Padding="10,3" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Backend}" Foreground="White" FontSize="12" FontWeight="SemiBold"/>
+                    </Border>
+                    <TextBlock Text="{Binding StoreName}" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding CashierName}" Foreground="#CFF3EC" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ===== Body: Danh mục | Hóa đơn | Thanh toán ===== -->
+        <Grid Grid.Row="1" ColumnDefinitions="320,*,380" Margin="10">
+
+            <!-- Cột 1: Danh mục hàng nhanh -->
+            <Border Grid.Column="0" Background="White" CornerRadius="12" Margin="0,0,10,0"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <Grid RowDefinitions="Auto,*">
+                    <ItemsControl Grid.Row="0" ItemsSource="{Binding Categories}" Margin="8,10,8,4">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Button Classes="cat" Content="{Binding}"
+                                        Command="{Binding $parent[ItemsControl].((vm:SalesViewModel)DataContext).SelectCategoryCommand}"
+                                        CommandParameter="{Binding}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsControl ItemsSource="{Binding FilteredProducts}" Margin="8">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="cat:SalesCatalogItem">
+                                    <Button Classes="tile" Width="138" Height="96" Margin="4"
+                                            Command="{Binding $parent[ItemsControl].((vm:SalesViewModel)DataContext).AddProductCommand}"
+                                            CommandParameter="{Binding}">
+                                        <StackPanel VerticalAlignment="Center" Spacing="6">
+                                            <TextBlock Text="{Binding Name}" TextWrapping="Wrap" TextAlignment="Center"
+                                                       FontWeight="SemiBold" FontSize="13" Foreground="{StaticResource Ink}"/>
+                                            <TextBlock TextAlignment="Center" Foreground="{StaticResource Brand}" FontWeight="Bold" FontSize="14">
+                                                <Run Text="{Binding Price, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Cột 2: Hóa đơn -->
+            <Border Grid.Column="1" Background="White" CornerRadius="12" Margin="0,0,10,0"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <Grid RowDefinitions="Auto,Auto,*">
+
+                    <!-- Tabs hóa đơn -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <ScrollViewer Grid.Column="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                            <ItemsControl ItemsSource="{Binding Tabs}" Margin="8,8,0,0">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="6"/></ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:InvoiceViewModel">
+                                        <Button Padding="0"
+                                                Command="{Binding $parent[ItemsControl].((vm:SalesViewModel)DataContext).SelectTabCommand}"
+                                                CommandParameter="{Binding}">
+                                            <Border CornerRadius="8,8,0,0" Padding="14,8" Background="#EFF3F2">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="{Binding Title}" Foreground="{StaticResource Ink}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                                    <Button Content="✕" Padding="2,0" FontSize="11" Background="Transparent" BorderThickness="0"
+                                                            Foreground="{StaticResource Muted}"
+                                                            Command="{Binding $parent[ItemsControl].((vm:SalesViewModel)DataContext).CloseTabCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                            </Border>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <Button Grid.Column="1" Content="+ Hóa đơn" Margin="8" Padding="12,6"
+                                Background="#F0F4F3" Foreground="{StaticResource BrandDark}" FontWeight="SemiBold"
+                                Command="{Binding AddTabCommand}"/>
+                    </Grid>
+
+                    <!-- Header bảng giỏ hàng -->
+                    <Border Grid.Row="1" Background="#F6F8F9" BorderBrush="{StaticResource Line}" BorderThickness="0,1">
+                        <Grid ColumnDefinitions="56,*,130,120,130,44" Margin="12,8">
+                            <TextBlock Grid.Column="0" Text="Mã" Classes="label" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="1" Text="Hàng hóa" Classes="label" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="2" Text="Số lượng" Classes="label" FontWeight="Bold" HorizontalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="Đơn giá" Classes="label" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="Thành tiền" Classes="label" FontWeight="Bold" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="5" Text=""/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Dòng hàng + empty state -->
+                    <Panel Grid.Row="2" DataContext="{Binding SelectedTab}">
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding Lines}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CartLineViewModel">
+                                        <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,8">
+                                            <Grid ColumnDefinitions="56,*,130,120,130,44" Margin="12,0">
+                                                <TextBlock Grid.Column="0" Text="{Binding Sku}" Foreground="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="{StaticResource Ink}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                                <StackPanel Grid.Column="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6">
+                                                    <Button Classes="step" Content="−"
+                                                            Command="{Binding $parent[ItemsControl].((vm:InvoiceViewModel)DataContext).DecreaseCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                    <TextBlock Text="{Binding Qty}" Width="34" TextAlignment="Center" VerticalAlignment="Center"
+                                                               Foreground="{StaticResource Ink}" FontWeight="SemiBold"/>
+                                                    <Button Classes="step" Content="+"
+                                                            Command="{Binding $parent[ItemsControl].((vm:InvoiceViewModel)DataContext).IncreaseCommand}"
+                                                            CommandParameter="{Binding}"/>
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource Ink}"
+                                                           Text="{Binding UnitPrice, Converter={StaticResource Vnd}}"/>
+                                                <TextBlock Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Right" FontWeight="Bold" Foreground="{StaticResource BrandDark}"
+                                                           Text="{Binding LineSubtotal, Converter={StaticResource Vnd}}"/>
+                                                <Button Grid.Column="5" Content="🗑" Background="Transparent" BorderThickness="0" Foreground="#C0392B"
+                                                        Command="{Binding $parent[ItemsControl].((vm:InvoiceViewModel)DataContext).RemoveCommand}"
+                                                        CommandParameter="{Binding}"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="6"
+                                    IsVisible="{Binding IsEmpty}">
+                            <TextBlock Text="🛒" FontSize="40" HorizontalAlignment="Center" Opacity="0.4"/>
+                            <TextBlock Text="Chưa có hàng trong hóa đơn" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Text="Bấm vào sản phẩm bên trái để thêm" Foreground="{StaticResource Muted}" FontSize="12"/>
+                        </StackPanel>
+                    </Panel>
+                </Grid>
+            </Border>
+
+            <!-- Cột 3: Thanh toán -->
+            <Border Grid.Column="2" Background="White" CornerRadius="12"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1"
+                    DataContext="{Binding SelectedTab}">
+                <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="16">
+
+                    <StackPanel Grid.Row="0" Spacing="8">
+                        <TextBox Text="{Binding CustomerName}" PlaceholderText="Tìm khách hàng..."/>
+                        <TextBox Text="{Binding Note}" PlaceholderText="Ghi chú đơn..."/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Spacing="10" Margin="0,16,0,0">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Classes="label">
+                                <Run Text="Tổng tiền hàng ("/><Run Text="{Binding ItemCount}"/><Run Text=")"/>
+                            </TextBlock>
+                            <TextBlock Grid.Column="1" Classes="val" Text="{Binding Subtotal, Converter={StaticResource Vnd}}"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="Giảm giá" Classes="label"/>
+                            <TextBox Grid.Column="1" Width="130" Height="34" Text="{Binding OrderDiscount}" TextAlignment="Right"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="Thuế VAT" Classes="label"/>
+                            <TextBlock Grid.Column="1" Classes="val" Text="{Binding TaxTotal, Converter={StaticResource Vnd}}"/>
+                        </Grid>
+
+                        <Border Background="#EAF7F4" CornerRadius="10" Padding="14,12" Margin="0,4">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="KHÁCH CẦN TRẢ" FontWeight="Bold" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" FontSize="24" FontWeight="Bold" Foreground="{StaticResource BrandDark}">
+                                    <Run Text="{Binding GrandTotal, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                </TextBlock>
+                            </Grid>
+                        </Border>
+
+                        <ComboBox ItemsSource="{Binding PaymentMethods}" SelectedItem="{Binding SelectedPaymentMethod}"
+                                  HorizontalAlignment="Stretch" Height="38"/>
+
+                        <TextBox Text="{Binding ExternalRef}" PlaceholderText="Mã giao dịch (thẻ/CK)..."
+                                 IsVisible="{Binding !IsCash}"/>
+
+                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsCash}">
+                            <TextBlock Grid.Column="0" Text="Khách thanh toán" Classes="label"/>
+                            <TextBox Grid.Column="1" Width="130" Height="34" Text="{Binding AmountTendered}" TextAlignment="Right"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding IsCash}">
+                            <TextBlock Grid.Column="0" Text="Tiền thừa trả khách" Classes="label"/>
+                            <TextBlock Grid.Column="1" FontWeight="Bold" Foreground="#C0392B" HorizontalAlignment="Right"
+                                       Text="{Binding ChangeDue, Converter={StaticResource Vnd}}"/>
+                        </Grid>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" TextWrapping="Wrap"
+                               Foreground="{StaticResource Pay}" FontWeight="SemiBold" VerticalAlignment="Bottom" Margin="0,12"/>
+
+                    <StackPanel Grid.Row="3" Spacing="8">
+                        <Grid ColumnDefinitions="*,*">
+                            <Button Grid.Column="0" Content="ĐỦ TIỀN" Margin="0,0,4,0" Height="40" HorizontalAlignment="Stretch"
+                                    Background="#F0F4F3" Foreground="{StaticResource BrandDark}" FontWeight="SemiBold"
+                                    IsVisible="{Binding IsCash}" Command="{Binding ExactCashCommand}"/>
+                            <Button Grid.Column="1" Content="XÓA HĐ" Margin="4,0,0,0" Height="40" HorizontalAlignment="Stretch"
+                                    Background="#FBEAEA" Foreground="#C0392B" FontWeight="SemiBold"
+                                    Command="{Binding ClearCommand}"/>
+                        </Grid>
+                        <Button Height="56" HorizontalAlignment="Stretch" CornerRadius="10"
+                                Background="{StaticResource Pay}" Foreground="White" FontWeight="Bold" FontSize="16"
+                                Command="{Binding $parent[UserControl].((vm:SalesViewModel)DataContext).CheckoutCommand}">
+                            <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+                                <TextBlock Text="THANH TOÁN" VerticalAlignment="Center"/>
+                                <TextBlock VerticalAlignment="Center">
+                                    <Run Text="{Binding GrandTotal, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

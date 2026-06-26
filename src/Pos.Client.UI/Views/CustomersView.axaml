@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Pos.Client.UI.ViewModels"
+             xmlns:conv="using:Pos.Client.UI.Converters"
+             mc:Ignorable="d" d:DesignWidth="1070" d:DesignHeight="800"
+             x:Class="Pos.Client.UI.Views.CustomersView"
+             x:DataType="vm:CustomersViewModel">
+
+    <UserControl.Resources>
+        <conv:VndConverter x:Key="Vnd"/>
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="*,340" Background="{StaticResource Page}" Margin="16">
+
+        <!-- Danh sách khách -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,*" Margin="0,0,14,0">
+            <Grid Grid.Row="0" ColumnDefinitions="*,240" Margin="2,0,2,14">
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Khách hàng &amp; Công nợ" Classes="h1"/>
+                    <TextBlock Text="Hồ sơ KH, điểm tích lũy &amp; dư nợ phải thu (B10)." Classes="subtitle"/>
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding SearchText}" PlaceholderText="Tìm tên / SĐT..." VerticalAlignment="Center"/>
+            </Grid>
+
+            <Border Grid.Row="1" Classes="card">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Grid.Row="0" Background="{StaticResource Header}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" CornerRadius="14,14,0,0">
+                        <Grid ColumnDefinitions="*,130,120,110,120" Margin="20,11">
+                            <TextBlock Grid.Column="0" Text="Tên khách" Classes="colhead"/>
+                            <TextBlock Grid.Column="1" Text="SĐT" Classes="colhead"/>
+                            <TextBlock Grid.Column="2" Text="MST" Classes="colhead"/>
+                            <TextBlock Grid.Column="3" Text="Điểm" Classes="colhead" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="4" Text="Dư nợ" Classes="colhead" HorizontalAlignment="Right"/>
+                        </Grid>
+                    </Border>
+                    <ScrollViewer Grid.Row="1">
+                        <ListBox ItemsSource="{Binding Customers}" SelectedItem="{Binding Selected}" Background="Transparent"
+                                 BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:CustomerRow">
+                                    <Grid ColumnDefinitions="*,130,120,110,120">
+                                        <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource Ink}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Phone}" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding TaxCode}" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding PointBalance}" Foreground="{StaticResource Ink}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="4" Foreground="#C0392B" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                            <Run Text="{Binding Outstanding, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                        </TextBlock>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Panel form + thu nợ -->
+        <ScrollViewer Grid.Column="1">
+            <StackPanel Spacing="12">
+                <!-- Form hồ sơ -->
+                <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="{Binding FormTitle}" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                        <TextBlock Text="Tên khách *" Foreground="{StaticResource Muted}" FontSize="12"/>
+                        <TextBox Text="{Binding FormName}" Height="36" CornerRadius="8"/>
+                        <TextBlock Text="SĐT (định danh chính)" Foreground="{StaticResource Muted}" FontSize="12"/>
+                        <TextBox Text="{Binding FormPhone}" Height="36" CornerRadius="8"/>
+                        <TextBlock Text="MST (cho HĐĐT có MST)" Foreground="{StaticResource Muted}" FontSize="12"/>
+                        <TextBox Text="{Binding FormTaxCode}" Height="36" CornerRadius="8"/>
+                        <TextBlock Text="Hạn mức tín dụng (đ)" Foreground="{StaticResource Muted}" FontSize="12"/>
+                        <TextBox Text="{Binding FormCreditLimit}" Height="36" CornerRadius="8"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                            <Button Content="Mới" Command="{Binding NewCustomerCommand}" CornerRadius="8" Padding="14,8"/>
+                            <Button Content="Lưu" Command="{Binding SaveCustomerCommand}" Background="{StaticResource Brand}" Foreground="White" CornerRadius="8" Padding="16,8"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- Thu nợ -->
+                <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Thu nợ khách đang chọn" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                        <TextBlock Text="{Binding Selected.Name}" Foreground="{StaticResource BrandDark}" FontWeight="SemiBold"/>
+                        <TextBlock Text="Số tiền thu (đ)" Foreground="{StaticResource Muted}" FontSize="12"/>
+                        <TextBox Text="{Binding DebtAmount}" Height="36" CornerRadius="8"/>
+                        <StackPanel Orientation="Horizontal" Spacing="14">
+                            <RadioButton GroupName="dp" Content="Tiền mặt" IsChecked="{Binding DebtCash}"/>
+                            <RadioButton GroupName="dp" Content="Chuyển khoản" IsChecked="{Binding !DebtCash}"/>
+                        </StackPanel>
+                        <Button Content="Ghi nhận thu nợ" Command="{Binding RecordDebtPaymentCommand}" HorizontalAlignment="Right"
+                                Background="{StaticResource BrandDark}" Foreground="White" CornerRadius="8" Padding="16,8"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandDark}" TextWrapping="Wrap" Margin="2"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

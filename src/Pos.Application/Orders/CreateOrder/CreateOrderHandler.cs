@@ -45,11 +45,12 @@ public sealed class CreateOrderHandler : IRequestHandler<CreateOrderCommand, Ord
             .Where(v => variantIds.Contains(v.Id))
             .ToDictionaryAsync(v => v.Id, ct);
 
-        var prices = await _db.PriceItems
-            .Where(p => variantIds.Contains(p.VariantId))
+        // Lấy về rồi gom theo biến thể ở bộ nhớ (tránh GroupBy+First không dịch được trên SQLite/offline).
+        var prices = (await _db.PriceItems
+                .Where(p => variantIds.Contains(p.VariantId))
+                .ToListAsync(ct))
             .GroupBy(p => p.VariantId)
-            .Select(g => g.OrderByDescending(p => p.CreatedUtc).First())
-            .ToDictionaryAsync(p => p.VariantId, p => p.Price, ct);
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.CreatedUtc).First().Price);
 
         // 5) Giải đơn giá + thuế suất từng dòng.
         int n = cmd.Lines.Count;

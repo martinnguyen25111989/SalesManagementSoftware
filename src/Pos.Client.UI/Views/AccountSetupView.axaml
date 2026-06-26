@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Pos.Client.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1070" d:DesignHeight="800"
+             x:Class="Pos.Client.UI.Views.AccountSetupView"
+             x:DataType="vm:AccountSetupViewModel">
+
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Color="#0E9D8A" Offset="0"/>
+                <GradientStop Color="#0B7E6F" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+        <Border Width="420" VerticalAlignment="Center" HorizontalAlignment="Center"
+                Background="White" CornerRadius="18" Padding="34" BoxShadow="0 18 50 0 #40000000">
+            <StackPanel Spacing="2">
+                <TextBlock Text="Thiết lập lần đầu" FontSize="25" FontWeight="Bold" Foreground="{StaticResource BrandDark}"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Tạo tài khoản quản trị (Chủ cửa hàng) để bắt đầu"
+                           Foreground="{StaticResource Muted}" HorizontalAlignment="Center" TextWrapping="Wrap"
+                           TextAlignment="Center" Margin="0,4,0,12"/>
+
+                <TextBlock Text="Họ tên" Classes="fld"/>
+                <TextBox Text="{Binding FullName}" PlaceholderText="vd: Nguyễn Văn A"/>
+
+                <TextBlock Text="Tên đăng nhập" Classes="fld"/>
+                <TextBox Text="{Binding Username}" PlaceholderText="vd: owner"/>
+
+                <TextBlock Text="Mật khẩu (≥ 6 ký tự)" Classes="fld"/>
+                <TextBox Text="{Binding Password}" PasswordChar="●"/>
+
+                <TextBlock Text="Nhập lại mật khẩu" Classes="fld"/>
+                <TextBox Text="{Binding ConfirmPassword}" PasswordChar="●"/>
+
+                <TextBlock Text="{Binding ErrorMessage}" Foreground="{StaticResource Danger}" TextWrapping="Wrap" Margin="2,10,0,0"
+                           IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+
+                <Button Content="TẠO TÀI KHOẢN" Classes="primary block lg" Margin="0,18,0,0"
+                        IsEnabled="{Binding !IsBusy}" Command="{Binding CreateCommand}" IsDefault="True"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

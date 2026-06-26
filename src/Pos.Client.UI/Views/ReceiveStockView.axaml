@@ -1,0 +1,123 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Pos.Client.UI.ViewModels"
+             xmlns:conv="using:Pos.Client.UI.Converters"
+             xmlns:sup="using:Pos.Application.Inventory.Suppliers"
+             xmlns:cat="using:Pos.Application.Catalog.Queries"
+             mc:Ignorable="d" d:DesignWidth="1070" d:DesignHeight="800"
+             x:Class="Pos.Client.UI.Views.ReceiveStockView"
+             x:DataType="vm:ReceiveStockViewModel">
+
+    <UserControl.Resources>
+        <conv:VndConverter x:Key="Vnd"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{StaticResource Page}" Margin="16">
+
+        <TextBlock Grid.Row="0" Text="Nhập hàng (Phiếu nhập kho)" Classes="h1" Margin="2,0,2,14"/>
+
+        <!-- NCC + thêm dòng -->
+        <Border Grid.Row="1" Classes="card" Padding="16">
+            <StackPanel Spacing="12">
+                <Grid ColumnDefinitions="2*,Auto,*" ColumnSpacing="10">
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Nhà cung cấp *" Classes="fld"/>
+                        <ComboBox ItemsSource="{Binding Suppliers}" SelectedItem="{Binding SelectedSupplier}"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="sup:SupplierItem">
+                                    <TextBlock Text="{Binding Name}"/>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="Thêm NCC mới" Classes="fld"/>
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
+                            <TextBox Grid.Column="0" Text="{Binding NewSupplierName}" PlaceholderText="Tên NCC..."/>
+                            <Button Grid.Column="1" Content="+" Classes="secondary" Width="44" Command="{Binding AddSupplierCommand}"/>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+
+                <Border Background="{StaticResource Line}" Height="1"/>
+
+                <Grid ColumnDefinitions="*,120,150,Auto" ColumnSpacing="10">
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Hàng hóa" Classes="fld"/>
+                        <ComboBox ItemsSource="{Binding Products}" SelectedItem="{Binding SelectedProduct}"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate x:DataType="cat:AdminProductItem">
+                                    <TextBlock>
+                                        <Run Text="{Binding Sku}"/><Run Text=" — "/><Run Text="{Binding Name}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Số lượng" Classes="fld"/>
+                        <TextBox Text="{Binding AddQty}" TextAlignment="Right"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
+                        <Button Content="+ Thêm dòng" Classes="secondary block" Command="{Binding AddLineCommand}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- Bảng dòng nhập -->
+        <Border Grid.Row="2" Classes="card" Margin="0,12,0,0">
+            <Grid RowDefinitions="Auto,*">
+                <Border Grid.Row="0" Background="#F6F8F9" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="100,*,120,150,150,50" Margin="16,10">
+                        <TextBlock Grid.Column="0" Text="SKU" FontWeight="Bold" Foreground="{StaticResource Muted}"/>
+                        <TextBlock Grid.Column="1" Text="Tên hàng" FontWeight="Bold" Foreground="{StaticResource Muted}"/>
+                        <TextBlock Grid.Column="2" Text="Số lượng" FontWeight="Bold" Foreground="{StaticResource Muted}" HorizontalAlignment="Center"/>
+                        <TextBlock Grid.Column="3" Text="Giá vốn" FontWeight="Bold" Foreground="{StaticResource Muted}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="4" Text="Thành tiền" FontWeight="Bold" Foreground="{StaticResource Muted}" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="5" Text=""/>
+                    </Grid>
+                </Border>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl ItemsSource="{Binding Lines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ReceiveLineRow">
+                                <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,6">
+                                    <Grid ColumnDefinitions="100,*,120,150,150,50" Margin="16,0">
+                                        <TextBlock Grid.Column="0" Text="{Binding Sku}" Foreground="{StaticResource Muted}" FontSize="12" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Name}" Foreground="{StaticResource Ink}" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap"/>
+                                        <TextBox Grid.Column="2" Text="{Binding Qty}" TextAlignment="Center" MinHeight="32" Margin="4,0"/>
+                                        <TextBox Grid.Column="3" Text="{Binding UnitCost}" TextAlignment="Right" MinHeight="32" Margin="4,0"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding LineTotal, Converter={StaticResource Vnd}}" FontWeight="Bold" Foreground="{StaticResource BrandDark}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <Button Grid.Column="5" Content="🗑" Classes="chip" Width="36" Padding="0" Background="Transparent" Foreground="{StaticResource Danger}"
+                                                VerticalAlignment="Center"
+                                                Command="{Binding $parent[ItemsControl].((vm:ReceiveStockViewModel)DataContext).RemoveLineCommand}"
+                                                CommandParameter="{Binding}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Tổng + xác nhận -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" Margin="0,12,0,0">
+            <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" TextWrapping="Wrap"
+                       Foreground="{StaticResource BrandDark}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="0,0,16,0" VerticalAlignment="Center">
+                <TextBlock Text="Tổng giá vốn:" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                <TextBlock FontSize="20" FontWeight="Bold" Foreground="{StaticResource Ink}" VerticalAlignment="Center">
+                    <Run Text="{Binding GrandTotal, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                </TextBlock>
+            </StackPanel>
+            <Button Grid.Column="2" Content="NHẬP KHO" Classes="primary lg" Width="180"
+                    IsEnabled="{Binding !IsBusy}" Command="{Binding SubmitCommand}"/>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,118 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Pos.Client.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1070" d:DesignHeight="800"
+             x:Class="Pos.Client.UI.Views.InvoicesView"
+             x:DataType="vm:InvoicesViewModel">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="Brand" Color="#0E9D8A"/>
+        <SolidColorBrush x:Key="BrandDark" Color="#0B7E6F"/>
+        <SolidColorBrush x:Key="Ink" Color="#2A2F34"/>
+        <SolidColorBrush x:Key="Muted" Color="#8A9098"/>
+        <SolidColorBrush x:Key="Line" Color="#E6EAEE"/>
+        <SolidColorBrush x:Key="Page" Color="#E9EDF1"/>
+    </UserControl.Resources>
+
+    <Grid ColumnDefinitions="*,330" Background="{StaticResource Page}" Margin="14">
+
+        <!-- Bảng kê HĐĐT -->
+        <Grid Grid.Column="0" RowDefinitions="Auto,Auto,*" Margin="0,0,12,0">
+            <StackPanel Grid.Row="0" Margin="2,0,2,12">
+                <TextBlock Text="Hóa đơn điện tử (HĐĐT-MTT)" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                <TextBlock Text="Bảng kê chứng từ &amp; trạng thái mã cơ quan thuế (B11)." Foreground="{StaticResource Muted}" FontSize="12"/>
+            </StackPanel>
+
+            <!-- KPI -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,*,*" Margin="0,0,0,12">
+                <Border Grid.Column="0" Background="White" CornerRadius="10" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14" Margin="0,0,6,0">
+                    <StackPanel><TextBlock Text="Đã cấp mã" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding IssuedCount}" FontSize="22" FontWeight="Bold" Foreground="{StaticResource BrandDark}"/></StackPanel>
+                </Border>
+                <Border Grid.Column="1" Background="White" CornerRadius="10" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14" Margin="6,0">
+                    <StackPanel><TextBlock Text="Chờ phát hành" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding PendingCount}" FontSize="22" FontWeight="Bold" Foreground="#E67E22"/></StackPanel>
+                </Border>
+                <Border Grid.Column="2" Background="White" CornerRadius="10" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14" Margin="6,0,0,0">
+                    <StackPanel><TextBlock Text="Bị từ chối" Foreground="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding RejectedCount}" FontSize="22" FontWeight="Bold" Foreground="#C0392B"/></StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2" Background="White" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Grid.Row="0" Background="#F6F8F9" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="150,110,110,130,*" Margin="16,10">
+                            <TextBlock Grid.Column="0" Text="Số đơn" FontWeight="Bold" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Grid.Column="1" Text="Loại" FontWeight="Bold" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Grid.Column="2" Text="Trạng thái" FontWeight="Bold" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Grid.Column="3" Text="Mã CQT" FontWeight="Bold" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Grid.Column="4" Text="Số HĐ / Ký hiệu / Ghi chú" FontWeight="Bold" Foreground="{StaticResource Muted}"/>
+                        </Grid>
+                    </Border>
+                    <ScrollViewer Grid.Row="1">
+                        <ListBox ItemsSource="{Binding Invoices}" SelectedItem="{Binding Selected}" Background="Transparent" BorderThickness="0">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="vm:InvoiceRow">
+                                    <Grid ColumnDefinitions="150,110,110,130,*">
+                                        <TextBlock Grid.Column="0" Text="{Binding OrderNumber}" Foreground="{StaticResource Ink}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TypeText}" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding StatusText}" Foreground="{StaticResource BrandDark}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding CqtCode}" Foreground="{StaticResource Ink}" VerticalAlignment="Center"/>
+                                        <StackPanel Grid.Column="4" VerticalAlignment="Center">
+                                            <TextBlock Foreground="{StaticResource Ink}"><Run Text="{Binding InvoiceNo}"/><Run Text="  "/><Run Text="{Binding Serial}"/></TextBlock>
+                                            <TextBlock Text="{Binding ErrorMessage}" Foreground="#C0392B" FontSize="11" TextWrapping="Wrap"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Panel hành động -->
+        <ScrollViewer Grid.Column="1">
+            <StackPanel Spacing="12">
+                <!-- Phát hành -->
+                <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Phát hành cho đơn" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                        <TextBox Text="{Binding IssueOrderNumber}" Height="36" CornerRadius="8" PlaceholderText="Số hóa đơn"/>
+                        <TextBlock Text="Người mua (nếu lấy HĐ có MST)" Foreground="{StaticResource Muted}" FontSize="12"/>
+                        <TextBox Text="{Binding BuyerName}" Height="36" CornerRadius="8" PlaceholderText="Tên người mua"/>
+                        <TextBox Text="{Binding BuyerTaxCode}" Height="36" CornerRadius="8" PlaceholderText="MST người mua"/>
+                        <Button Content="Phát hành HĐĐT" Command="{Binding IssueForOrderCommand}" HorizontalAlignment="Right"
+                                Background="{StaticResource Brand}" Foreground="White" CornerRadius="8" Padding="16,8"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Hàng đợi offline -->
+                <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Hàng đợi offline" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                        <TextBlock Text="Phát hành lần lượt các HĐ còn chờ khi đã có mạng (idempotent theo đơn)." Foreground="{StaticResource Muted}" FontSize="12" TextWrapping="Wrap"/>
+                        <Button Content="Xử lý hàng đợi" Command="{Binding ProcessPendingCommand}" HorizontalAlignment="Right"
+                                Background="{StaticResource BrandDark}" Foreground="White" CornerRadius="8" Padding="16,8"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Điều chỉnh / thay thế / hủy -->
+                <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
+                    <StackPanel Spacing="8">
+                        <TextBlock Text="Điều chỉnh / Thay thế / Hủy" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                        <TextBlock Text="{Binding Selected.OrderNumber, StringFormat='HĐ đang chọn: {0}'}" Foreground="{StaticResource BrandDark}" FontWeight="SemiBold"/>
+                        <TextBox Text="{Binding ReviseReason}" Height="36" CornerRadius="8" PlaceholderText="Lý do (bắt buộc)"/>
+                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                            <Button Content="Điều chỉnh" Command="{Binding ReviseCommand}" CommandParameter="Adjust" CornerRadius="8" Padding="12,8"/>
+                            <Button Content="Thay thế" Command="{Binding ReviseCommand}" CommandParameter="Replace" CornerRadius="8" Padding="12,8"/>
+                            <Button Content="Hủy" Command="{Binding ReviseCommand}" CommandParameter="Cancel" Background="#C0392B" Foreground="White" CornerRadius="8" Padding="12,8"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandDark}" TextWrapping="Wrap" Margin="2"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

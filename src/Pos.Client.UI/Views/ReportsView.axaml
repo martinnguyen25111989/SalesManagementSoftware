@@ -1,0 +1,385 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Pos.Client.UI.ViewModels"
+             xmlns:conv="using:Pos.Client.UI.Converters"
+             xmlns:tx="using:Pos.Application.Reports.TaxInvoice"
+             xmlns:ss="using:Pos.Application.Reports.SalesSummary"
+             xmlns:ps="using:Pos.Application.Reports.ProductSales"
+             xmlns:iv="using:Pos.Application.Reports.InventoryValuation"
+             xmlns:da="using:Pos.Application.Reports.DebtAging"
+             mc:Ignorable="d" d:DesignWidth="1070" d:DesignHeight="800"
+             x:Class="Pos.Client.UI.Views.ReportsView"
+             x:DataType="vm:ReportsViewModel">
+
+    <UserControl.Resources>
+        <conv:VndConverter x:Key="Vnd"/>
+        <SolidColorBrush x:Key="Brand" Color="#0E9D8A"/>
+        <SolidColorBrush x:Key="BrandDark" Color="#0B7E6F"/>
+        <SolidColorBrush x:Key="Ink" Color="#2A2F34"/>
+        <SolidColorBrush x:Key="Muted" Color="#8A9098"/>
+        <SolidColorBrush x:Key="Line" Color="#E6EAEE"/>
+        <SolidColorBrush x:Key="Page" Color="#E9EDF1"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Button.tab">
+            <Setter Property="Padding" Value="16,9"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#2A2F34"/>
+            <Setter Property="BorderBrush" Value="#E6EAEE"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.tab.active">
+            <Setter Property="Background" Value="#0B7E6F"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#0B7E6F"/>
+        </Style>
+        <Style Selector="TextBlock.th">
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#8A9098"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Background="{StaticResource Page}" Margin="14">
+
+        <!-- Header + bộ lọc kỳ -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto" Margin="2,0,2,12">
+            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                <TextBlock Text="Báo cáo" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                <TextBlock Text="Doanh thu · sản phẩm · thanh toán · thuế · tồn · công nợ (B12)"
+                           Foreground="{StaticResource Muted}" FontSize="12"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,8,0">
+                <TextBlock Text="Từ" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/>
+                <DatePicker SelectedDate="{Binding FromDate}"/>
+                <TextBlock Text="đến" VerticalAlignment="Center" Foreground="{StaticResource Muted}"/>
+                <DatePicker SelectedDate="{Binding ToDate}"/>
+            </StackPanel>
+            <Button Grid.Column="2" Content="Xem báo cáo" Command="{Binding LoadCommand}"
+                    Background="{StaticResource Brand}" Foreground="White" CornerRadius="8" Padding="16,9"
+                    FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <TextBlock Grid.Column="3" Text="Đang tải..." Foreground="{StaticResource Muted}" Margin="10,0,0,0"
+                       VerticalAlignment="Center" IsVisible="{Binding IsLoading}"/>
+        </Grid>
+
+        <!-- KPI -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*,*" Margin="2,0,2,12">
+            <Border Grid.Column="0" Background="White" CornerRadius="12" Padding="16,12" Margin="0,0,8,0"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Doanh thu thuần" Foreground="{StaticResource Muted}" FontSize="12"/>
+                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="{StaticResource BrandDark}">
+                        <Run Text="{Binding NetSales, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="1" Background="White" CornerRadius="12" Padding="16,12" Margin="0,0,8,0"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Doanh thu gộp" Foreground="{StaticResource Muted}" FontSize="12"/>
+                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="{StaticResource Ink}">
+                        <Run Text="{Binding GrossSales, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Background="White" CornerRadius="12" Padding="16,12" Margin="0,0,8,0"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Hoàn trả" Foreground="{StaticResource Muted}" FontSize="12"/>
+                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="#C0392B">
+                        <Run Text="{Binding Refunds, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="3" Background="White" CornerRadius="12" Padding="16,12" Margin="0,0,8,0"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Số đơn" Foreground="{StaticResource Muted}" FontSize="12"/>
+                    <TextBlock Text="{Binding OrderCount}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="4" Background="White" CornerRadius="12" Padding="16,12"
+                    BorderBrush="{StaticResource Line}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="TB/đơn" Foreground="{StaticResource Muted}" FontSize="12"/>
+                    <TextBlock FontSize="20" FontWeight="Bold" Foreground="{StaticResource Ink}">
+                        <Run Text="{Binding AverageOrderValue, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Tab strip -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="2,0,2,12">
+            <Button Classes="tab" Classes.active="{Binding IsSales}" Content="Bán hàng"
+                    Command="{Binding SelectTabCommand}" CommandParameter="sales"/>
+            <Button Classes="tab" Classes.active="{Binding IsProducts}" Content="Sản phẩm / Lợi nhuận"
+                    Command="{Binding SelectTabCommand}" CommandParameter="products"/>
+            <Button Classes="tab" Classes.active="{Binding IsPayments}" Content="Thanh toán"
+                    Command="{Binding SelectTabCommand}" CommandParameter="payments"/>
+            <Button Classes="tab" Classes.active="{Binding IsTax}" Content="Thuế / HĐĐT"
+                    Command="{Binding SelectTabCommand}" CommandParameter="tax"/>
+            <Button Classes="tab" Classes.active="{Binding IsInventory}" Content="Giá trị tồn"
+                    Command="{Binding SelectTabCommand}" CommandParameter="inventory"/>
+            <Button Classes="tab" Classes.active="{Binding IsDebt}" Content="Công nợ"
+                    Command="{Binding SelectTabCommand}" CommandParameter="debt"/>
+        </StackPanel>
+
+        <!-- Nội dung tab -->
+        <Border Grid.Row="3" Background="White" CornerRadius="12"
+                BorderBrush="{StaticResource Line}" BorderThickness="1">
+            <Panel Margin="2">
+
+                <!-- BÁN HÀNG: doanh thu theo ngày + theo thu ngân -->
+                <Grid IsVisible="{Binding IsSales}" ColumnDefinitions="*,*" Margin="14">
+                    <DockPanel Grid.Column="0" Margin="0,0,7,0">
+                        <TextBlock DockPanel.Dock="Top" Text="Theo ngày" FontWeight="Bold" Foreground="{StaticResource Ink}" Margin="0,0,0,8"/>
+                        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,100,*" Margin="0,0,0,6">
+                            <TextBlock Grid.Column="0" Classes="th" Text="Ngày"/>
+                            <TextBlock Grid.Column="1" Classes="th" Text="Số đơn" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Classes="th" Text="Doanh thu" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding Daily}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="ss:DailySales">
+                                        <Grid ColumnDefinitions="*,100,*" Margin="0,5">
+                                            <TextBlock Grid.Column="0" Text="{Binding Date}" Foreground="{StaticResource Ink}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding OrderCount}" HorizontalAlignment="Right" Foreground="{StaticResource Ink}"/>
+                                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{StaticResource Ink}">
+                                                <Run Text="{Binding GrossSales, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                    <DockPanel Grid.Column="1" Margin="7,0,0,0">
+                        <TextBlock DockPanel.Dock="Top" Text="Theo thu ngân" FontWeight="Bold" Foreground="{StaticResource Ink}" Margin="0,0,0,8"/>
+                        <Grid DockPanel.Dock="Top" ColumnDefinitions="*,100,*" Margin="0,0,0,6">
+                            <TextBlock Grid.Column="0" Classes="th" Text="Thu ngân"/>
+                            <TextBlock Grid.Column="1" Classes="th" Text="Số đơn" HorizontalAlignment="Right"/>
+                            <TextBlock Grid.Column="2" Classes="th" Text="Doanh thu" HorizontalAlignment="Right"/>
+                        </Grid>
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding ByCashier}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:CashierSalesRow">
+                                        <Grid ColumnDefinitions="*,100,*" Margin="0,5">
+                                            <TextBlock Grid.Column="0" Text="{Binding CashierName}" Foreground="{StaticResource Ink}"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding OrderCount}" HorizontalAlignment="Right" Foreground="{StaticResource Ink}"/>
+                                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{StaticResource Ink}">
+                                                <Run Text="{Binding GrossSales, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Grid>
+
+                <!-- SẢN PHẨM / LỢI NHUẬN -->
+                <DockPanel IsVisible="{Binding IsProducts}" Margin="14">
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,90,140,140,140" Margin="0,0,0,8">
+                        <TextBlock Grid.Column="0" Classes="th" Text="Sản phẩm"/>
+                        <TextBlock Grid.Column="1" Classes="th" Text="SL bán" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Classes="th" Text="Doanh thu" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Classes="th" Text="Giá vốn" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="4" Classes="th" Text="Lãi gộp" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Products}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="ps:ProductSalesRow">
+                                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,8">
+                                        <Grid ColumnDefinitions="*,90,140,140,140">
+                                            <TextBlock Grid.Column="0" Text="{Binding ProductName}" Foreground="{StaticResource Ink}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding QtySold}" HorizontalAlignment="Right" Foreground="{StaticResource Ink}"/>
+                                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" Foreground="{StaticResource Ink}">
+                                                <Run Text="{Binding RevenueExVat, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" Foreground="{StaticResource Muted}">
+                                                <Run Text="{Binding Cost, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="4" HorizontalAlignment="Right" FontWeight="Bold" Foreground="{StaticResource BrandDark}">
+                                                <Run Text="{Binding GrossProfit, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- THANH TOÁN -->
+                <DockPanel IsVisible="{Binding IsPayments}" Margin="14">
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,160,160,160" Margin="0,0,0,8">
+                        <TextBlock Grid.Column="0" Classes="th" Text="Phương thức"/>
+                        <TextBlock Grid.Column="1" Classes="th" Text="Thu" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Classes="th" Text="Hoàn" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Classes="th" Text="Thực thu" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Payments}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="vm:PaymentRow">
+                                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,10">
+                                        <Grid ColumnDefinitions="*,160,160,160">
+                                            <TextBlock Grid.Column="0" Text="{Binding Method}" Foreground="{StaticResource Ink}" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="{StaticResource Ink}">
+                                                <Run Text="{Binding Gross, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" Foreground="#C0392B">
+                                                <Run Text="{Binding Refunds, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" FontWeight="Bold" Foreground="{StaticResource BrandDark}">
+                                                <Run Text="{Binding Net, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- THUẾ / HĐĐT -->
+                <DockPanel IsVisible="{Binding IsTax}" Margin="14">
+                    <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="20" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="HĐ đã phát hành" Foreground="{StaticResource Muted}" FontSize="12"/>
+                            <TextBlock Text="{Binding InvoicesIssued}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrandDark}"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Chờ phát hành" Foreground="{StaticResource Muted}" FontSize="12"/>
+                            <TextBlock Text="{Binding InvoicesPending}" FontSize="18" FontWeight="Bold" Foreground="#B8860B"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Bị từ chối" Foreground="{StaticResource Muted}" FontSize="12"/>
+                            <TextBlock Text="{Binding InvoicesRejected}" FontSize="18" FontWeight="Bold" Foreground="#C0392B"/>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Tổng thuế" Foreground="{StaticResource Muted}" FontSize="12"/>
+                            <TextBlock FontSize="18" FontWeight="Bold" Foreground="{StaticResource Ink}">
+                                <Run Text="{Binding TotalTax, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,200,200" Margin="0,0,0,8">
+                        <TextBlock Grid.Column="0" Classes="th" Text="Thuế suất"/>
+                        <TextBlock Grid.Column="1" Classes="th" Text="Tiền trước thuế" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Classes="th" Text="Tiền thuế" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding TaxRows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="tx:TaxByRate">
+                                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,10">
+                                        <Grid ColumnDefinitions="*,200,200">
+                                            <TextBlock Grid.Column="0" Foreground="{StaticResource Ink}" FontWeight="SemiBold">
+                                                <Run Text="{Binding VatPercent}"/><Run Text="%"/>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Foreground="{StaticResource Ink}">
+                                                <Run Text="{Binding TaxableAmount, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontWeight="Bold" Foreground="{StaticResource BrandDark}">
+                                                <Run Text="{Binding VatAmount, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- GIÁ TRỊ TỒN -->
+                <DockPanel IsVisible="{Binding IsInventory}" Margin="14">
+                    <Border DockPanel.Dock="Top" Background="#F6F8F9" CornerRadius="8" Padding="14,10" Margin="0,0,0,12"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Tổng giá trị tồn (giá vốn):" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                            <TextBlock FontWeight="Bold" FontSize="16" Foreground="{StaticResource BrandDark}" VerticalAlignment="Center">
+                                <Run Text="{Binding InventoryTotal, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,120,150,160" Margin="0,0,0,8">
+                        <TextBlock Grid.Column="0" Classes="th" Text="Sản phẩm"/>
+                        <TextBlock Grid.Column="1" Classes="th" Text="Tồn" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Classes="th" Text="Giá vốn BQ" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Classes="th" Text="Giá trị" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Inventory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="iv:InventoryValueRow">
+                                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,8">
+                                        <Grid ColumnDefinitions="*,120,150,160">
+                                            <TextBlock Grid.Column="0" Text="{Binding ProductName}" Foreground="{StaticResource Ink}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Quantity}" HorizontalAlignment="Right" Foreground="{StaticResource Ink}"/>
+                                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" Foreground="{StaticResource Muted}">
+                                                <Run Text="{Binding AvgCost, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" FontWeight="Bold" Foreground="{StaticResource BrandDark}">
+                                                <Run Text="{Binding Value, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+
+                <!-- CÔNG NỢ / TUỔI NỢ -->
+                <DockPanel IsVisible="{Binding IsDebt}" Margin="14">
+                    <Border DockPanel.Dock="Top" Background="#F6F8F9" CornerRadius="8" Padding="14,10" Margin="0,0,0,12"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Tổng dư nợ phải thu:" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/>
+                            <TextBlock FontWeight="Bold" FontSize="16" Foreground="#C0392B" VerticalAlignment="Center">
+                                <Run Text="{Binding DebtTotal, Converter={StaticResource Vnd}}"/><Run Text=" đ"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </Border>
+                    <Grid DockPanel.Dock="Top" ColumnDefinitions="*,130,130,130,130,130" Margin="0,0,0,8">
+                        <TextBlock Grid.Column="0" Classes="th" Text="Khách hàng"/>
+                        <TextBlock Grid.Column="1" Classes="th" Text="Dư nợ" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Classes="th" Text="≤30 ngày" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Classes="th" Text="31–60" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="4" Classes="th" Text="61–90" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="5" Classes="th" Text="&gt;90" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding Debt}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="da:CustomerAging">
+                                    <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,8">
+                                        <Grid ColumnDefinitions="*,130,130,130,130,130">
+                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Foreground="{StaticResource Ink}" FontWeight="SemiBold"/>
+                                            <TextBlock Grid.Column="1" HorizontalAlignment="Right" FontWeight="Bold" Foreground="{StaticResource Ink}" Text="{Binding Outstanding, Converter={StaticResource Vnd}}"/>
+                                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" Foreground="{StaticResource Ink}" Text="{Binding Current, Converter={StaticResource Vnd}}"/>
+                                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" Foreground="{StaticResource Ink}" Text="{Binding Bucket31_60, Converter={StaticResource Vnd}}"/>
+                                            <TextBlock Grid.Column="4" HorizontalAlignment="Right" Foreground="#B8860B" Text="{Binding Bucket61_90, Converter={StaticResource Vnd}}"/>
+                                            <TextBlock Grid.Column="5" HorizontalAlignment="Right" FontWeight="Bold" Foreground="#C0392B" Text="{Binding Over90, Converter={StaticResource Vnd}}"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+
+            </Panel>
+        </Border>
+    </Grid>
+</UserControl>

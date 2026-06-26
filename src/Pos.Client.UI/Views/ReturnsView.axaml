@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:Pos.Client.UI.ViewModels"
+             xmlns:conv="using:Pos.Client.UI.Converters"
+             mc:Ignorable="d" d:DesignWidth="1070" d:DesignHeight="800"
+             x:Class="Pos.Client.UI.Views.ReturnsView"
+             x:DataType="vm:ReturnsViewModel">
+
+    <UserControl.Resources>
+        <conv:VndConverter x:Key="Vnd"/>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Background="{StaticResource Page}" Margin="16">
+
+        <!-- Header + tra cứu hóa đơn -->
+        <StackPanel Grid.Row="0" Margin="2,0,2,14">
+            <TextBlock Text="Trả / Đổi hàng &amp; Hoàn tiền" Classes="h1"/>
+            <TextBlock Text="Tra cứu hóa đơn gốc theo số đơn, chọn dòng &amp; số lượng cần trả." Classes="subtitle"/>
+        </StackPanel>
+
+        <Border Grid.Row="1" Classes="card" Padding="14" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBox Text="{Binding OrderNumber}" Width="280" VerticalAlignment="Center"
+                         PlaceholderText="Số hóa đơn (vd HCM01-000123)"/>
+                <Button Content="Tìm hóa đơn" Classes="primary" Command="{Binding FindOrderCommand}"/>
+                <TextBlock Text="{Binding OrderInfo}" Foreground="{StaticResource BrandDark}" FontWeight="SemiBold"
+                           VerticalAlignment="Center" IsVisible="{Binding OrderLoaded}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Danh sách dòng -->
+        <Border Grid.Row="2" Classes="card" IsVisible="{Binding OrderLoaded}">
+            <Grid RowDefinitions="Auto,*">
+                <Border Grid.Row="0" Background="{StaticResource Header}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" CornerRadius="14,14,0,0">
+                    <Grid ColumnDefinitions="*,90,90,110,120,130" Margin="16,11">
+                        <TextBlock Grid.Column="0" Text="Tên hàng" Classes="colhead"/>
+                        <TextBlock Grid.Column="1" Text="Đã mua" Classes="colhead" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Text="Đã trả" Classes="colhead" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Text="Còn trả được" Classes="colhead" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="4" Text="SL trả" Classes="colhead" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="5" Text="Nhập lại kho" Classes="colhead" HorizontalAlignment="Center"/>
+                    </Grid>
+                </Border>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl ItemsSource="{Binding Lines}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ReturnLineRow">
+                                <Border BorderBrush="{StaticResource Line}" BorderThickness="0,0,0,1" Padding="0,8">
+                                    <Grid ColumnDefinitions="*,90,90,110,120,130" Margin="16,0">
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding ProductName}" Foreground="{StaticResource Ink}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                            <TextBlock Foreground="{StaticResource Muted}" FontSize="11"><Run Text="{Binding UnitPrice, Converter={StaticResource Vnd}}"/><Run Text=" đ/"/><Run Text="{Binding Unit}"/></TextBlock>
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding PurchasedQty}" Foreground="{StaticResource Ink}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding AlreadyReturned}" Foreground="{StaticResource Muted}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding ReturnableQty}" Foreground="{StaticResource BrandDark}" FontWeight="Bold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="4" Text="{Binding ReturnQty}" Width="90" Height="34" CornerRadius="8" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                        <CheckBox Grid.Column="5" IsChecked="{Binding RestockToInventory}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <!-- Lý do + hoàn tiền + submit -->
+        <Border Grid.Row="3" Classes="card" Padding="14" Margin="0,12,0,0" IsVisible="{Binding OrderLoaded}">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Grid.Column="0" Spacing="8" Margin="0,0,16,0">
+                    <TextBlock Text="Lý do trả hàng" Foreground="{StaticResource Muted}" FontSize="12"/>
+                    <TextBox Text="{Binding Reason}" Height="38" CornerRadius="8" PlaceholderText="vd: khách đổi ý / hàng lỗi"/>
+                    <StackPanel Orientation="Horizontal" Spacing="16">
+                        <RadioButton GroupName="rf" Content="Hoàn tiền mặt" IsChecked="{Binding RefundCash}"/>
+                        <RadioButton GroupName="rf" Content="Hoàn chuyển khoản/QR" IsChecked="{Binding !RefundCash}"/>
+                        <CheckBox Content="Manager duyệt" IsChecked="{Binding ManagerApproved}" IsVisible="{Binding CanRefund}"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding StatusMessage}" Foreground="{StaticResource BrandDark}" TextWrapping="Wrap"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="Xác nhận trả hàng" Classes="danger lg" VerticalAlignment="Bottom"
+                        Command="{Binding SubmitReturnCommand}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

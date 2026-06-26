@@ -3,18 +3,102 @@
         xmlns:vm="using:Pos.Client.UI.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
         x:Class="Pos.Client.UI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Pos.Client.UI">
+        Width="1280" Height="800"
+        WindowStartupLocation="CenterScreen"
+        Title="POS · Quản lý bán hàng">
 
     <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
         <vm:MainWindowViewModel/>
     </Design.DataContext>
 
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Window.Styles>
+        <Style Selector="Button.nav">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="16,12"/>
+            <Setter Property="Margin" Value="8,2"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#CFE9E4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="Button.nav:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="#0E9D8A"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="Button.nav.active /template/ ContentPresenter#PART_ContentPresenter">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#0B7E6F"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid ColumnDefinitions="Auto,*">
+
+        <!-- Thanh điều hướng — chỉ hiện sau khi đăng nhập -->
+        <Border Grid.Column="0" Background="#0B7E6F" Width="210" IsVisible="{Binding IsAuthenticated}">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <StackPanel Grid.Row="0" Margin="16,18,16,10" Spacing="2">
+                    <TextBlock Text="POS RETAIL" Foreground="White" FontWeight="Bold" FontSize="18"/>
+                    <TextBlock Text="{Binding StoreName}" Foreground="#9FD9CF" FontSize="12"/>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Margin="0,8">
+                    <Button Classes="nav" Classes.active="{Binding IsPos}" Content="🛒  Bán hàng (POS)"
+                            Command="{Binding NavigateCommand}" CommandParameter="pos"/>
+                    <Button Classes="nav" Classes.active="{Binding IsReturns}" Content="↩️  Trả / Đổi hàng"
+                            IsVisible="{Binding CanReturn}"
+                            Command="{Binding NavigateCommand}" CommandParameter="returns"/>
+                    <Button Classes="nav" Classes.active="{Binding IsShift}" Content="🧾  Ca &amp; Quỹ tiền"
+                            Command="{Binding NavigateCommand}" CommandParameter="shift"/>
+                    <Button Classes="nav" Classes.active="{Binding IsCustomers}" Content="🧑  Khách hàng"
+                            Command="{Binding NavigateCommand}" CommandParameter="customers"/>
+
+                    <!-- Khu QUẢN TRỊ — chỉ hiện khi có quyền (B2) -->
+                    <StackPanel IsVisible="{Binding CanManage}">
+                        <Separator Margin="16,8" Background="#0E9D8A"/>
+                        <TextBlock Text="QUẢN TRỊ" Foreground="#7FC4B9" FontSize="11" FontWeight="Bold" Margin="20,4"/>
+                        <Button Classes="nav" Classes.active="{Binding IsProducts}" Content="📦  Sản phẩm"
+                                Command="{Binding NavigateCommand}" CommandParameter="products"/>
+                        <Button Classes="nav" Classes.active="{Binding IsReceive}" Content="📥  Nhập hàng"
+                                Command="{Binding NavigateCommand}" CommandParameter="receive"/>
+                        <Button Classes="nav" Classes.active="{Binding IsInventory}" Content="🏬  Tồn kho"
+                                Command="{Binding NavigateCommand}" CommandParameter="inventory"/>
+                    </StackPanel>
+
+                    <!-- Người dùng & phân quyền — chỉ hiện khi có quyền user.manage (B2) -->
+                    <Button Classes="nav" Classes.active="{Binding IsUsers}" Content="👤  Người dùng"
+                            IsVisible="{Binding CanManageUsers}"
+                            Command="{Binding NavigateCommand}" CommandParameter="users"/>
+
+                    <!-- HĐĐT — kế toán/quản lý (B11) -->
+                    <Button Classes="nav" Classes.active="{Binding IsInvoices}" Content="📄  Hóa đơn điện tử"
+                            IsVisible="{Binding CanManageInvoices}"
+                            Command="{Binding NavigateCommand}" CommandParameter="invoices"/>
+
+                    <!-- Báo cáo — chỉ hiện khi có quyền report.view (B2/B12) -->
+                    <Button Classes="nav" Classes.active="{Binding IsReports}" Content="📊  Báo cáo"
+                            IsVisible="{Binding CanViewReports}"
+                            Command="{Binding NavigateCommand}" CommandParameter="reports"/>
+                </StackPanel>
+
+                <!-- Người dùng + đăng xuất -->
+                <StackPanel Grid.Row="2" Margin="16,10,16,16" Spacing="6">
+                    <Separator Background="#0E9D8A"/>
+                    <TextBlock Text="{Binding UserName}" Foreground="White" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                    <Button Content="Đăng xuất" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                            Background="#0E9D8A" Foreground="White" CornerRadius="8" Padding="0,8"
+                            Command="{Binding LogoutCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Nội dung -->
+        <ContentControl Grid.Column="1" Content="{Binding CurrentView}"/>
+    </Grid>
 
 </Window>
