@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Pos.Application.Catalog.Queries;
 using Pos.Application.Common;
@@ -13,6 +14,7 @@ using Pos.Application.Orders.CheckoutOrder;
 using Pos.Application.Orders.CreateOrder;
 using Pos.Client.UI.Services;
 using Pos.Domain.Common;
+using Pos.Infrastructure.Persistence;
 
 namespace Pos.Client.UI.ViewModels;
 
@@ -46,6 +48,9 @@ public partial class SalesViewModel : ViewModelBase
     public ObservableCollection<SalesCatalogItem> FilteredProducts { get; } = new();
     public ObservableCollection<InvoiceViewModel> Tabs { get; } = new();
 
+    /// <summary>Hồ sơ khách hàng để gợi ý nhanh tại quầy (B10) — tìm theo tên/SĐT khi gõ.</summary>
+    public ObservableCollection<CustomerSuggestion> Customers { get; } = new();
+
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _selectedCategory = AllCategory;
     [ObservableProperty] private InvoiceViewModel? _selectedTab;
@@ -64,6 +69,20 @@ public partial class SalesViewModel : ViewModelBase
         OnPropertyChanged(nameof(CashierName));
         OnPropertyChanged(nameof(Backend));
         await RefreshCatalogAsync();
+    }
+
+    /// <summary>Nạp danh sách khách hàng để gợi ý tại ô "Tìm khách hàng" (B10).</summary>
+    public async Task RefreshCustomersAsync()
+    {
+        using var scope = _scopes.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PosDbContext>();
+        var list = await db.Customers
+            .OrderBy(c => c.Name)
+            .Select(c => new CustomerSuggestion(c.Id, c.Name, c.Phone, c.TierId))
+            .ToListAsync();
+
+        Customers.Clear();
+        foreach (var c in list) Customers.Add(c);
     }
 
     /// <summary>
@@ -87,6 +106,7 @@ public partial class SalesViewModel : ViewModelBase
             SelectedCategory = AllCategory;
 
         RefreshProducts();
+        await RefreshCustomersAsync();
     }
 
     [RelayCommand]
@@ -149,6 +169,8 @@ public partial class SalesViewModel : ViewModelBase
                 ShiftId = _session.ShiftId,
                 CashierId = _session.CashierId,
                 DeviceId = _session.DeviceId,
+                CustomerId = tab.CustomerId,
+                CustomerTierId = tab.CustomerTierId,
                 OrderDiscount = tab.OrderDiscount,
                 Lines = tab.Lines
                     .Select(l => new CreateOrderLine(l.VariantId, l.Qty, l.LineDiscount))
@@ -204,3 +226,6 @@ public partial class SalesViewModel : ViewModelBase
         foreach (var p in items) FilteredProducts.Add(p);
     }
 }
+
+/// <summary>Gợi ý khách hàng tại quầy (B10) — khớp theo tên hoặc SĐT.</summary>
+public sealed record CustomerSuggestion(Guid Id, string Name, string? Phone, Guid? TierId);

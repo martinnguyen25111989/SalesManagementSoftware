@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="1280" d:DesignHeight="800"
         x:Class="Pos.Client.UI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Icon="/Assets/avalonia-logo.ico"
+        Icon="/Assets/logo_square.png"
         Width="1280" Height="800"
         WindowStartupLocation="CenterScreen"
         Title="POS · Quản lý bán hàng">
@@ -42,9 +42,12 @@
         <!-- Thanh điều hướng — chỉ hiện sau khi đăng nhập -->
         <Border Grid.Column="0" Background="#0B7E6F" Width="210" IsVisible="{Binding IsAuthenticated}">
             <Grid RowDefinitions="Auto,*,Auto">
-                <StackPanel Grid.Row="0" Margin="16,18,16,10" Spacing="2">
-                    <TextBlock Text="POS RETAIL" Foreground="White" FontWeight="Bold" FontSize="18"/>
-                    <TextBlock Text="{Binding StoreName}" Foreground="#9FD9CF" FontSize="12"/>
+                <StackPanel Grid.Row="0" Margin="16,16,16,8" Spacing="6">
+                    <Border Background="White" CornerRadius="14" Padding="10" HorizontalAlignment="Stretch">
+                        <Image Source="/Assets/logo.png" Height="96" Stretch="Uniform"/>
+                    </Border>
+                    <TextBlock Text="{Binding StoreName}" Foreground="#CFF3EC" FontSize="12" FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
                 </StackPanel>
 
                 <StackPanel Grid.Row="1" Margin="0,8">

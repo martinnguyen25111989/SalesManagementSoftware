@@ -61,37 +61,37 @@
         <ScrollViewer Grid.Column="1">
             <StackPanel Spacing="12">
                 <!-- Form hồ sơ -->
-                <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="{Binding FormTitle}" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
-                        <TextBlock Text="Tên khách *" Foreground="{StaticResource Muted}" FontSize="12"/>
-                        <TextBox Text="{Binding FormName}" Height="36" CornerRadius="8"/>
-                        <TextBlock Text="SĐT (định danh chính)" Foreground="{StaticResource Muted}" FontSize="12"/>
-                        <TextBox Text="{Binding FormPhone}" Height="36" CornerRadius="8"/>
-                        <TextBlock Text="MST (cho HĐĐT có MST)" Foreground="{StaticResource Muted}" FontSize="12"/>
-                        <TextBox Text="{Binding FormTaxCode}" Height="36" CornerRadius="8"/>
-                        <TextBlock Text="Hạn mức tín dụng (đ)" Foreground="{StaticResource Muted}" FontSize="12"/>
-                        <TextBox Text="{Binding FormCreditLimit}" Height="36" CornerRadius="8"/>
-                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
-                            <Button Content="Mới" Command="{Binding NewCustomerCommand}" CornerRadius="8" Padding="14,8"/>
-                            <Button Content="Lưu" Command="{Binding SaveCustomerCommand}" Background="{StaticResource Brand}" Foreground="White" CornerRadius="8" Padding="16,8"/>
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding FormTitle}" Classes="h2" Margin="0,0,0,4"/>
+                        <TextBlock Text="Tên khách *" Classes="fld"/>
+                        <TextBox Text="{Binding FormName}"/>
+                        <TextBlock Text="SĐT (định danh chính)" Classes="fld"/>
+                        <TextBox Text="{Binding FormPhone}"/>
+                        <TextBlock Text="MST (cho HĐĐT có MST)" Classes="fld"/>
+                        <TextBox Text="{Binding FormTaxCode}"/>
+                        <TextBlock Text="Hạn mức tín dụng (đ)" Classes="fld"/>
+                        <TextBox Text="{Binding FormCreditLimit}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,12,0,0">
+                            <Button Content="Mới" Classes="secondary" Command="{Binding NewCustomerCommand}"/>
+                            <Button Content="Lưu" Classes="primary" Command="{Binding SaveCustomerCommand}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
 
                 <!-- Thu nợ -->
-                <Border Background="White" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1" Padding="14">
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="Thu nợ khách đang chọn" FontWeight="Bold" Foreground="{StaticResource Ink}"/>
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Thu nợ khách đang chọn" Classes="h2" Margin="0,0,0,4"/>
                         <TextBlock Text="{Binding Selected.Name}" Foreground="{StaticResource BrandDark}" FontWeight="SemiBold"/>
-                        <TextBlock Text="Số tiền thu (đ)" Foreground="{StaticResource Muted}" FontSize="12"/>
-                        <TextBox Text="{Binding DebtAmount}" Height="36" CornerRadius="8"/>
-                        <StackPanel Orientation="Horizontal" Spacing="14">
+                        <TextBlock Text="Số tiền thu (đ)" Classes="fld"/>
+                        <TextBox Text="{Binding DebtAmount}"/>
+                        <StackPanel Orientation="Horizontal" Spacing="14" Margin="0,6,0,0">
                             <RadioButton GroupName="dp" Content="Tiền mặt" IsChecked="{Binding DebtCash}"/>
                             <RadioButton GroupName="dp" Content="Chuyển khoản" IsChecked="{Binding !DebtCash}"/>
                         </StackPanel>
-                        <Button Content="Ghi nhận thu nợ" Command="{Binding RecordDebtPaymentCommand}" HorizontalAlignment="Right"
-                                Background="{StaticResource BrandDark}" Foreground="White" CornerRadius="8" Padding="16,8"/>
+                        <Button Content="Ghi nhận thu nợ" Classes="primary" Command="{Binding RecordDebtPaymentCommand}"
+                                HorizontalAlignment="Right" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Border>
 

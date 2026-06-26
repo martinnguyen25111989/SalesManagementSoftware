@@ -25,6 +25,12 @@ public partial class InvoiceViewModel : ObservableObject
 
     [ObservableProperty] private string _title;
     [ObservableProperty] private string _customerName = string.Empty;
+
+    /// <summary>Khách đã chọn từ gợi ý (B10) — gắn CustomerId/hạng vào đơn; null = khách lẻ.</summary>
+    [ObservableProperty] private CustomerSuggestion? _selectedCustomer;
+    [ObservableProperty] private Guid? _customerId;
+    [ObservableProperty] private Guid? _customerTierId;
+
     [ObservableProperty] private string _note = string.Empty;
     [ObservableProperty] private decimal _orderDiscount;
     [ObservableProperty] private decimal _amountTendered;
@@ -80,6 +86,7 @@ public partial class InvoiceViewModel : ObservableObject
         AmountTendered = 0m;
         ExternalRef = string.Empty;
         StatusMessage = string.Empty;
+        ClearCustomer();
         Recalculate();
     }
 
@@ -90,7 +97,16 @@ public partial class InvoiceViewModel : ObservableObject
         OrderDiscount = 0m;
         AmountTendered = 0m;
         ExternalRef = string.Empty;
+        ClearCustomer();
         Recalculate();
+    }
+
+    private void ClearCustomer()
+    {
+        SelectedCustomer = null;
+        CustomerId = null;
+        CustomerTierId = null;
+        CustomerName = string.Empty;
     }
 
     [RelayCommand]
@@ -110,6 +126,25 @@ public partial class InvoiceViewModel : ObservableObject
             or nameof(CartLineViewModel.UnitPrice)
             or nameof(CartLineViewModel.LineDiscount))
             Recalculate();
+    }
+
+    partial void OnSelectedCustomerChanged(CustomerSuggestion? value)
+    {
+        if (value is null) return;
+        CustomerId = value.Id;
+        CustomerTierId = value.TierId;
+        CustomerName = value.Name;
+    }
+
+    partial void OnCustomerNameChanged(string value)
+    {
+        // Gõ tay làm khác đi tên khách đã chọn → bỏ gắn khách (tránh sai CustomerId).
+        if (SelectedCustomer is not null && !string.Equals(value, SelectedCustomer.Name, StringComparison.Ordinal))
+        {
+            SelectedCustomer = null;
+            CustomerId = null;
+            CustomerTierId = null;
+        }
     }
 
     partial void OnOrderDiscountChanged(decimal value) => Recalculate();

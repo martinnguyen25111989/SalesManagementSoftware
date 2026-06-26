@@ -17,7 +17,8 @@
         <Border Width="420" VerticalAlignment="Center" HorizontalAlignment="Center"
                 Background="White" CornerRadius="18" Padding="34" BoxShadow="0 18 50 0 #40000000">
             <StackPanel Spacing="2">
-                <TextBlock Text="Thiết lập lần đầu" FontSize="25" FontWeight="Bold" Foreground="{StaticResource BrandDark}"
+                <Image Source="/Assets/logo.png" Height="120" Stretch="Uniform" Margin="0,0,0,8"/>
+                <TextBlock Text="Thiết lập lần đầu" FontSize="22" FontWeight="Bold" Foreground="{StaticResource BrandDark}"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="Tạo tài khoản quản trị (Chủ cửa hàng) để bắt đầu"
                            Foreground="{StaticResource Muted}" HorizontalAlignment="Center" TextWrapping="Wrap"

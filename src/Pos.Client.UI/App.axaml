@@ -93,11 +93,11 @@
             <Setter Property="MinHeight" Value="32"/>
         </Style>
 
-        <!-- ── Nút: kích thước cơ sở dùng chung (mọi nút bo góc & padding đều) ─ -->
+        <!-- ── Nút: nền tảng (bo góc/đậm/con trỏ). KHÔNG ép Height ở base để
+             không phá các nút chuyên biệt (ô sản phẩm, +/- số lượng…) — chiều
+             cao đồng nhất đặt ở các class biến thể bên dưới. -->
         <Style Selector="Button">
             <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Padding" Value="16,0"/>
-            <Setter Property="Height" Value="40"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -110,6 +110,13 @@
         </Style>
         <Style Selector="Button:disabled">
             <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+
+        <!-- Kích thước chuẩn cho các nút hành động (áp cho class màu) -->
+        <Style Selector="Button.primary, Button.secondary, Button.danger, Button.ghost">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="18,0"/>
+            <Setter Property="MinWidth" Value="96"/>
         </Style>
 
         <!-- Nút chính (hành động chủ đạo) -->
@@ -183,6 +190,7 @@
         <Style Selector="Button.chip">
             <Setter Property="Height" Value="32"/>
             <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="MinWidth" Value="0"/>
             <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="FontSize" Value="12.5"/>
         </Style>

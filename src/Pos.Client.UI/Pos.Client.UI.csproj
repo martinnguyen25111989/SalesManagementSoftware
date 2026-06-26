@@ -5,10 +5,13 @@
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Icon ứng dụng Windows (.exe). macOS dùng .icns trong app bundle khi đóng gói (deploy). -->
+    <ApplicationIcon>Assets\logo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
-    <AvaloniaResource Include="Assets\**" />
+    <!-- Nhúng tài nguyên UI; loại .icns/.ico (chỉ dùng làm icon đóng gói, không cần avares). -->
+    <AvaloniaResource Include="Assets\**" Exclude="Assets\logo.icns;Assets\logo.ico;Assets\avalonia-logo.ico" />
   </ItemGroup>
 
   <ItemGroup>

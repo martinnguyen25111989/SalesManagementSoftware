@@ -17,8 +17,7 @@
         <Border Width="380" VerticalAlignment="Center" HorizontalAlignment="Center"
                 Background="White" CornerRadius="18" Padding="34" BoxShadow="0 18 50 0 #40000000">
             <StackPanel Spacing="6">
-                <TextBlock Text="POS RETAIL" FontSize="27" FontWeight="Bold" Foreground="{StaticResource BrandDark}"
-                           HorizontalAlignment="Center"/>
+                <Image Source="/Assets/logo.png" Height="140" Stretch="Uniform" Margin="0,0,0,4"/>
                 <TextBlock Text="{Binding StoreName}" Foreground="{StaticResource Muted}" HorizontalAlignment="Center" Margin="0,0,0,16"/>
 
                 <TextBlock Text="Tên đăng nhập" Classes="fld"/>

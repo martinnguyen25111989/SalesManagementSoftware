@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -35,6 +36,10 @@ public partial class App : Avalonia.Application
             }).GetAwaiter().GetResult();
 
             desktop.MainWindow = new MainWindow { DataContext = mainVm };
+
+            // macOS: đặt icon Dock thành logo khi chạy dev (dotnet run chưa có app bundle .icns).
+            if (OperatingSystem.IsMacOS())
+                MacOsDock.SetIcon("avares://Pos.Client.UI/Assets/logo_square.png");
         }
 
         base.OnFrameworkInitializationCompleted();
